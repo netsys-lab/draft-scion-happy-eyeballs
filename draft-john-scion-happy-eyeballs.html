@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>SCION in Happy Eyeballs Version 3</title>
+<meta content="Tony John" name="author">
+<meta content="Jelte van Bommel" name="author">
+<meta content="Tilmann Zäschke" name="author">
+<meta content="Lars-Christian Schulz" name="author">
+<meta content="Nicola Rustignoli" name="author">
+<meta content="
+       Happy Eyeballs Version 3 uses the choice of addresses that a service offers: it races connection attempts to IPv6 and IPv4 addresses. SCION (Scalability, Control, and Isolation On Next-generation networks) is a path-aware inter-domain network architecture in which a client also has a choice of paths to an address. This document specifies how a Happy Eyeballs client uses SCION addresses published in DNS Service Binding (SVCB) and HTTPS records. The client treats SCION as a third address family. It selects a small number of paths that differ from each other and attempts a SCION address on the first. Each time a short delay passes and no attempt has succeeded, it starts an attempt on the next path, while the earlier attempts continue. The number of paths (2 by default) and the delay (50 milliseconds by default) are configurable. Each attempt is a separate connection, and the client uses the first attempt that succeeds. The attempts on further paths do not delay attempts to other addresses. 
+    " name="description">
+<meta content="xml2rfc 3.35.0" name="generator">
+<meta content="Happy Eyeballs" name="keyword">
+<meta content="SCION" name="keyword">
+<meta content="QUIC" name="keyword">
+<meta content="path-aware networking" name="keyword">
+<meta content="draft-john-scion-happy-eyeballs-latest" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.35.0
+    Python 3.14.10
+    ConfigArgParse 1.9.0
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.14.3
+    pycountry 24.6.1
+    PyYAML 6.0.3
+    requests 2.33.1
+    wcwidth 0.9.4
+-->
+<link href="draft-john-scion-happy-eyeballs.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Italic'), local('Lora-Italic'), url('https://martinthomson.github.io/rfc-css/fonts/lora-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Lora Regular'), local('Lora-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/lora-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-cyrillic.woff2') format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-vietnamese.woff2') format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Oxygen Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Oxygen Mono'), local('OxygenMono-Regular'), url('https://martinthomson.github.io/rfc-css/fonts/oxygenmono-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light dark;
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --pilcrow-weak: #ddd;
+  --pilcrow-strong: #bbb;
+  --small-font-size: 14.5px;
+  --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
+  scrollbar-color: #bbb #eee;
+}
+body {
+  max-width: 600px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+section {
+  clear: both;
+}
+.section-number {
+  padding-right: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 680;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
+}
+
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 27px;
+}
+h4, h5, h6 {
+  font-size: 20px;
+  line-height: 24px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+#abstract+p {
+  font-size: 18px;
+  line-height: 24px;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
+}
+
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div {
+  margin: 0;
+}
+.alignRight {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
+}
+svg {
+  display: block;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
+}
+.alignCenter {
+  margin: 1em 0;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 0.5em 2em;
+  & :is(ol, ul) {
+    margin-left: 1em;
+  }
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+  & li {
+    margin-top: 0.5em;
+  }
+}
+:is(ul, ol).compact, .ulCompact, .olCompact {
+  margin: 0 0 0 2em;
+  & li {
+    margin: 0;
+    & :first-child { margin-top: 0; }
+    & :last-child { margin-bottom: 0; }
+  }
+}
+
+/* definition lists */
+dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
+  &.olPercent {
+    --indent: 5ch;
+    & > dt {
+      min-width: calc(var(--indent) - 2ch);
+      float: none;
+    }
+  }
+
+  dl > dd > & {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+  }
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
+}
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+  & > :is(:first-child, .break:first-child + *) {
+    margin-top: 0;
+  }
+  & > :is(:last-child) {
+    margin-bottom: 0;
+  }
+}
+:is(dd, span).break {
+  display: none;
+}
+
+/* links */
+a {
+  text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
+}
+.iref + a[href].internal {
+  color: var(--text-color);
+}
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px var(--font-mono);
+}
+tt, code {
+  /* changing the font for inline elements leads to different ascender
+     and descender heights; as we want to retain baseline alignment,
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
+  line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
+}
+pre {
+  border: 1px solid var(--line-color);
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+  padding: 0;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+  caption-side: bottom;
+}
+@media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
+  }
+  pre, svg {
+    display: inline-block;
+    /* In the horizontal direction, sometimes people make over-sized figures.
+       Scrollbars for those is therefore necessary: auto adds them as necessary..
+       In the vertical direction, the line-height can combine with the font
+       asender/descender height to produce scrollbars: hidden avoids that. */
+    overflow: auto hidden;
+  }
+  pre {
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  svg {
+    max-width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  :is(pre, svg) + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  margin: 1em 0;
+  border-left: 2px var(--pilcrow-strong) solid;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
+}
+
+thead, tbody {
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 5px 10px;
+}
+th {
+  background-color: var(--line-color);
+}
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
+  background-color: var(--background-color);
+}
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
+  background-color: var(--highlight-color);
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  opacity: 0.2;
+  user-select: none;
+  &[href] {
+    color: var(--pilcrow-weak);
+    &:hover { text-decoration: none; }
+  }
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
+  }
+  @media print {
+    display: none;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: 600;
+  font-size: var(--small-font-size);
+}
+.role {
+  font-variant: all-small-caps;
+}
+sub, sup {
+  line-height: 1;
+  font-size: 80%;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 15ch;
+  & dt {
+    width: var(--identifier-width);
+    min-width: var(--identifier-width);
+    clear: left;
+    float: left;
+    text-align: right;
+    margin-right: 1ch;
+  }
+  & dd {
+    margin: 0;
+    margin-left: calc(1em + var(--identifier-width)) !important;
+    min-width: 5em;
+  }
+  & .authors {
+    & .author {
+      display: inline-block;
+      margin-right: 1.5em;
+    }
+    & .org {
+      font-style: italic;
+    }
+  }
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+  & .prepared {
+    float: right;
+  }
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+
+  & nav {
+    & ul {
+      margin: 0 0.5em 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    & li {
+      line-height: 1.3em;
+      margin: 2px 0;
+      padding-left: 1.2em;
+      text-indent: -1.2em;
+    }
+  }
+  & a.xref {
+    white-space: normal;
+  }
+}
+
+.references {
+  & > dt {
+    text-align: right;
+    font-weight: bold;
+    min-width: 10ch;
+    margin-right: 1.5ch;
+    &:target::before {
+      content: "⇒";
+      margin: 0 10px 0 -25px;
+    }
+  }
+  & > dd {
+    margin-left: 12ch !important;
+    overflow: visible;
+    & .refInstance {
+      margin-bottom: 0.8em;
+    }
+    & .ascii {
+      margin-bottom: 0.25em;
+    }
+  }
+}
+
+#rfc\.index\.index + ul {
+  margin-left: 0;
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  max-width: 20em;
+  margin: 1em auto 1em 0;
+
+  & .nameRole {
+    font-weight: 700;
+    margin-left: 0;
+  }
+  & .label {
+    margin: 0.5em 0;
+  }
+  & .type {
+    display: none;
+  }
+  & .alternative-contact {
+    margin: 0.5em 0 0.25em 0;
+  }
+  & .non-ascii {
+    margin: 0 0 0 2em;
+  }
+  & div.left {
+    text-align: left;
+  }
+  & div.right {
+    text-align: right;
+  }
+}
+
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 500px) {
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
+  }
+}
+
+/* Comments */
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+
+@media screen {
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
+      }
+    }
+    & a.toplink {
+      float: right;
+    }
+  }
+}
+@media not screen {
+  #toc a.toplink {
+    display: none;
+  }
+}
+
+
+/* TOC layout for smaller screens */
+@media screen and (max-width: 929px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 1px 0 0 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
+    }
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
+  }
+}
+
+/* TOC layout for wide screens */
+@media screen and (min-width: 930px) {
+  body {
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc {
+    page-break-before: always;
+    border-top: none;
+    padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
+  }
+  figure, pre, .vcard {
+    page-break-inside: avoid;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  :is(h2, h3, h4, h5, h6)+*, dd {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Dark mode. */
+@media (prefers-color-scheme: dark) {
+:root {
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --title-color: #fff;
+  --link-color: #4da4f0;
+  --highlight-color: #282828;
+  --line-color: #444;
+  --pilcrow-weak: #444;
+  --pilcrow-strong: #666;
+  scrollbar-color: #777 #333;
+}
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill], [fill] *)) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
+}
+</style>
+
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">SCION Happy Eyeballs</td>
+<td class="right">November 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">John, et al.</td>
+<td class="center">Expires 20 May 2027</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Network Working Group</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-john-scion-happy-eyeballs-latest</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-11-16" class="published">16 November 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Experimental</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2027-05-20">20 May 2027</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">T. John</div>
+<div class="org">OVGU Magdeburg</div>
+</div>
+<div class="author">
+      <div class="author-name">J. van Bommel</div>
+<div class="org">ETH Zurich</div>
+</div>
+<div class="author">
+      <div class="author-name">T. Zäschke</div>
+<div class="org">ETH Zurich</div>
+</div>
+<div class="author">
+      <div class="author-name">L. Schulz</div>
+<div class="org">OVGU Magdeburg</div>
+</div>
+<div class="author">
+      <div class="author-name">N. Rustignoli</div>
+<div class="org">SCION Association</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">SCION in Happy Eyeballs Version 3</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">Happy Eyeballs Version 3 uses the choice of addresses that a service offers: it races connection attempts to IPv6 and IPv4 addresses. SCION (Scalability, Control, and Isolation On Next-generation networks) is a path-aware inter-domain network architecture in which a client also has a choice of paths to an address. This document specifies how a Happy Eyeballs client uses SCION addresses published in DNS Service Binding (SVCB) and HTTPS records. The client treats SCION as a third address family. It selects a small number of paths that differ from each other and attempts a SCION address on the first. Each time a short delay passes and no attempt has succeeded, it starts an attempt on the next path, while the earlier attempts continue. The number of paths (2 by default) and the delay (50 milliseconds by default) are configurable. Each attempt is a separate connection, and the client uses the first attempt that succeeds. The attempts on further paths do not delay attempts to other addresses.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<section class="note rfcEditorRemove" id="section-note.1">
+      <h2 id="name-about-this-document">
+<a href="#name-about-this-document" class="section-name selfRef">About This Document</a>
+      </h2>
+<p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">
+        Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-john-scion-happy-eyeballs/">https://datatracker.ietf.org/doc/draft-john-scion-happy-eyeballs/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+<p id="section-note.1-3">Source for this draft and an issue tracker can be found at
+        <span><a href="https://github.com/netsys-lab/draft-scion-happy-eyeballs">https://github.com/netsys-lab/draft-scion-happy-eyeballs</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 20 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-hostname-resolution-and-pat" class="internal xref">Hostname Resolution and Path Lookup</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-sending-dns-queries" class="internal xref">Sending DNS Queries</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-scion-endpoints" class="internal xref">SCION Endpoints</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-path-lookup" class="internal xref">Path Lookup</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-sorting-endpoints" class="internal xref">Sorting Endpoints</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-starting-connection-attempt" class="internal xref">Starting Connection Attempts</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-connection-attempts" class="internal xref">Connection Attempts</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-candidate-paths" class="internal xref">Candidate Paths</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-attempts-over-paths" class="internal xref">Attempts over Paths</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-transport-requirements" class="internal xref">Transport Requirements</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-early-data" class="internal xref">Early Data</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-scmp-error-messages" class="internal xref">SCMP Error Messages</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.6">
+                <p id="section-toc.1-1.6.2.6.1"><a href="#section-6.6" class="auto internal xref">6.6</a>.  <a href="#name-applications-that-require-s" class="internal xref">Applications That Require SCION</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.7">
+                <p id="section-toc.1-1.6.2.7.1"><a href="#section-6.7" class="auto internal xref">6.7</a>.  <a href="#name-after-establishment" class="internal xref">After Establishment</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-summary-of-configurable-val" class="internal xref">Summary of Configurable Values</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-experiment-goals" class="internal xref">Experiment Goals</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-results-so-far" class="internal xref">Results So Far</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-attempts-over-several-paths" class="internal xref">Attempts over Several Paths</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-path-selection" class="internal xref">Path Selection</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.3">
+                <p id="section-toc.1-1.9.2.3.1"><a href="#section-9.3" class="auto internal xref">9.3</a>.  <a href="#name-load" class="internal xref">Load</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.4">
+                <p id="section-toc.1-1.9.2.4.1"><a href="#section-9.4" class="auto internal xref">9.4</a>.  <a href="#name-downgrade" class="internal xref">Downgrade</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-privacy-considerations" class="internal xref">Privacy Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#section-12" class="auto internal xref">12</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#section-12.1" class="auto internal xref">12.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#section-12.2" class="auto internal xref">12.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-design-rationale" class="internal xref">Design Rationale</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-implementation-status" class="internal xref">Implementation Status</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">SCION <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span> is a path-aware inter-domain network architecture <span>[<a href="#RFC9217" class="cite xref">RFC9217</a>]</span>. A source endpoint looks up paths to the destination Autonomous System (AS) and puts the chosen path into each packet. <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> defines the "scion" SvcParamKey, which publishes the SCION addresses of a service endpoint in SVCB and HTTPS records <span>[<a href="#RFC9460" class="cite xref">RFC9460</a>]</span>. Happy Eyeballs Version 3 (HEv3) <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> does not consider SCION addresses.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">HEv3 uses the choice of addresses that a service offers. SCION adds a second choice, the choice of paths. A client usually knows several paths to one SCION address, and these paths cross different ASes and links. One path can work when another does not.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document lets an HEv3 client use both choices. A SCION address is one more endpoint in the HEv3 list of endpoints. When its turn comes, the client selects a small number of paths that differ from each other, at most the Path Attempt Count, and starts an attempt on the first. Each time the Path Attempt Delay passes and no attempt has succeeded, the client starts an attempt on the next of these paths, while the earlier attempts continue. Each attempt is a separate connection, and the client uses the first attempt that succeeds. When the first path works, the client normally makes only one handshake. The attempts on further paths do not delay attempts to other endpoints.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">This document covers connection establishment only (<a href="#after-establishment" class="auto internal xref">Section 6.7</a>). The rules of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> apply unless this document says otherwise. This document does not update HEv3. A client without SCION connectivity ignores the "scion" key.<a href="#section-1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+"<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">This document uses the terms of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> and the term "SCION address" of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>. In this document, "AS" means a SCION AS, and "path" means a SCION path, as in <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>. This document also uses the following terms:<a href="#section-2-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-2-3">
+        <dt id="section-2-3.1">ISD-AS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.2">
+          <p id="section-2-3.2.1">The pair of the Isolation Domain (ISD) number and the AS number that together identify an AS.<a href="#section-2-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.3">SCION connectivity:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.4">
+          <p id="section-2-3.4.1">A client has SCION connectivity if it can look up paths (Section 4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>) and send and receive SCION packets on a chosen path.<a href="#section-2-3.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.5">SCION endpoint:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.6">
+          <p id="section-2-3.6.1">An endpoint whose address is a SCION address.<a href="#section-2-3.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.7">Eligible path:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.8">
+          <p id="section-2-3.8.1">A path to the AS of a SCION endpoint on which the client can attempt that endpoint (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>).<a href="#section-2-3.8.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.9">Candidate paths:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.10">
+          <p id="section-2-3.10.1">The eligible paths that the client selects when it attempts a SCION endpoint (<a href="#path-selection" class="auto internal xref">Section 6.1</a>). The client makes at most one connection attempt on each.<a href="#section-2-3.10.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.11">Path Attempt Count:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.12">
+          <p id="section-2-3.12.1">The largest number of candidate paths that the client selects for one SCION endpoint.<a href="#section-2-3.12.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.13">Path Attempt Delay:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.14">
+          <p id="section-2-3.14.1">The time between the starts of two attempts on candidate paths of one SCION endpoint.<a href="#section-2-3.14.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.15">Hop:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.16">
+          <p id="section-2-3.16.1">The traversal of one AS by a path. A path is a sequence of hops. Each hop has the ISD-AS of its AS and the Interface IDs (Section 1.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>) through which the path enters and leaves that AS. An AS in which two path segments join is one hop (Section 2.4.2 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>).<a href="#section-2-3.16.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.17">Inter-AS link:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.18">
+          <p id="section-2-3.18.1">A link between two ASes (Section 1.3 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>), including a peering link. It is identified by the ISD-AS and the Interface ID at each of its two ends. A path traverses one inter-AS link between each hop and the next.<a href="#section-2-3.18.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.19">Pair of adjacent ASes:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.20">
+          <p id="section-2-3.20.1">The ASes of two consecutive hops of a path. More than one inter-AS link can connect the same pair of adjacent ASes.<a href="#section-2-3.20.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.21">Transit AS:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.22">
+          <p id="section-2-3.22.1">An AS of a hop that is neither the first nor the last hop of a path. All paths to one SCION endpoint have the same first and last AS.<a href="#section-2-3.22.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.23">AS hops:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.24">
+          <p id="section-2-3.24.1">The number of inter-AS links that a path traverses.<a href="#section-2-3.24.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="section-2-3.25">Expiry of a path:</dt>
+        <dd style="margin-left: 1.5em" id="section-2-3.26">
+          <p id="section-2-3.26.1">The earliest expiration time of the Hop Fields of the path (Section 2.2.2.5 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>). A path has expired when this time has passed.<a href="#section-2-3.26.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="resolution">
+<section id="section-3">
+      <h2 id="name-hostname-resolution-and-pat">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-hostname-resolution-and-pat" class="section-name selfRef">Hostname Resolution and Path Lookup</a>
+      </h2>
+<div id="sending-dns-queries">
+<section id="section-3.1">
+        <h3 id="name-sending-dns-queries">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-sending-dns-queries" class="section-name selfRef">Sending DNS Queries</a>
+        </h3>
+<p id="section-3.1-1">A client with SCION connectivity <span class="bcp14">SHOULD</span> send an SVCB or HTTPS query (Section 4.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) for any application protocol that has an SVCB mapping, even if the client has no IPv4 or IPv6 connectivity, because SCION addresses are published only in these records. This document adds no other DNS queries.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scion-endpoints">
+<section id="section-3.2">
+        <h3 id="name-scion-endpoints">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-scion-endpoints" class="section-name selfRef">SCION Endpoints</a>
+        </h3>
+<p id="section-3.2-1">Each distinct usable SCION address (Section 3.3.1 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>) of a ServiceMode record yields one SCION endpoint with the record's SvcPriority and port. Its application protocols are those of the record's SVCB ALPN set (Section 7.1 of <span>[<a href="#RFC9460" class="cite xref">RFC9460</a>]</span>) whose transport the client can use over SCION (Section 3.3 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>). If there are none, the address yields no endpoint.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="path-lookup">
+<section id="section-3.3">
+        <h3 id="name-path-lookup">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-path-lookup" class="section-name selfRef">Path Lookup</a>
+        </h3>
+<p id="section-3.3-1">An IP address, whether from an address record or from a hint, is usable as soon as the client receives it. A SCION address is usable only when the client has a path to its AS. When the client creates a SCION endpoint, it therefore starts a path lookup for the endpoint's ISD-AS. SCION endpoints with the same ISD-AS share one lookup. A lookup can be answered from a cache, for example that of a path service on the client's host (a local path service). The limit on the number of destination ASes for which a client looks up paths (Section 5.4 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>) applies.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">A path is eligible if it has not expired and its MTU (Section 3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>) is at least the size of the largest SCION packet that the client sends on it before the handshake completes, without underlay encapsulation. For QUIC, the largest of these packets carries a UDP payload of at least 1200 octets (Section 14.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">A SCION endpoint enters the list of endpoints when its path lookup has returned at least one eligible path. If connection attempts have already started, the endpoint is added as Section 7 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> describes. A SCION endpoint in the client's own AS needs no lookup and enters the list at once. Its only path is the empty path (Section 2.4.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>), which has no expiry and has the MTU of the client's AS.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+<p id="section-3.3-4">A client gives up on a path lookup that has not completed within 2 seconds. This limit bounds how long a client with no other endpoint waits (<a href="#starting" class="auto internal xref">Section 5</a>). If the lookup fails or returns no eligible path, the client discards the SCION endpoint.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="sorting">
+<section id="section-4">
+      <h2 id="name-sorting-endpoints">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-sorting-endpoints" class="section-name selfRef">Sorting Endpoints</a>
+      </h2>
+<p id="section-4-1">SCION endpoints are grouped by application protocol and security requirements (Section 5.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) and by service priority (Section 5.2 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) in the same way as the IP endpoints of the same record.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">Within a group, the SCION endpoints form a third address family. Destination Address Selection <span>[<a href="#RFC6724" class="cite xref">RFC6724</a>]</span> (Section 5.3 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) orders the IP endpoints only. A client orders the SCION endpoints among themselves at random, as Section 3.3 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> recommends, unless local policy sets another order.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">By default, a client orders the address families as SCION first, then the family of the first IP endpoint after Destination Address Selection, then the other IP family. Only SCION attempts give the application a choice of path; <a href="#results" class="auto internal xref">Section 8.1</a> reports what this order costs. A client whose local policy or application prefers IP orders SCION last instead. In both cases, the client interleaves the three families as Section 5.3 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> interleaves two, starting with as many endpoints of the first family as the Preferred Address Family Count.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">For example, take SCION endpoints S1 and S2, IPv6 endpoints x1 and x2, and IPv4 endpoints y1 and y2, all in one group, with x1 first after Destination Address Selection and a Preferred Address Family Count of 1. The list is then S1, x1, y1, S2, x2, y2.<a href="#section-4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="starting">
+<section id="section-5">
+      <h2 id="name-starting-connection-attempt">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-starting-connection-attempt" class="section-name selfRef">Starting Connection Attempts</a>
+      </h2>
+<p id="section-5-1">A client that orders SCION first (<a href="#sorting" class="auto internal xref">Section 4</a>) treats a path lookup as HEv3 treats a DNS query for the preferred address family. It applies the conditions of Section 4.2 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> for starting connection attempts as follows:<a href="#section-5-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5-2.1">
+          <p id="section-5-2.1.1">SCION is the preferred address family while the client has a SCION endpoint whose path lookup has not failed.<a href="#section-5-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-5-2.2">
+          <p id="section-5-2.2.1">A SCION endpoint in the list of endpoints counts as a positive answer for the SCION family. The client then starts connection attempts without waiting for other answers.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-5-2.3">
+          <p id="section-5-2.3.1">A path lookup in progress is an answer that has not been received. Once the client has a positive answer for an IP address family, it waits for the lookup no longer than the Resolution Delay and then starts with the IP endpoints. A SCION endpoint whose lookup completes later is added to the list (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>). A client that wants to wait longer for path lookups can configure a longer Resolution Delay (Section 10 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), which also lengthens the wait for DNS answers.<a href="#section-5-2.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-5-3">A client that orders SCION last does not wait for path lookups.<a href="#section-5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="attempts">
+<section id="section-6">
+      <h2 id="name-connection-attempts">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-connection-attempts" class="section-name selfRef">Connection Attempts</a>
+      </h2>
+<p id="section-6-1">A SCION endpoint takes its turn in the list of endpoints as an IP endpoint does. When its turn comes, the client selects candidate paths (<a href="#path-selection" class="auto internal xref">Section 6.1</a>) and attempts the endpoint on them (<a href="#path-attempts" class="auto internal xref">Section 6.2</a>).<a href="#section-6-1" class="pilcrow">¶</a></p>
+<div id="path-selection">
+<section id="section-6.1">
+        <h3 id="name-candidate-paths">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-candidate-paths" class="section-name selfRef">Candidate Paths</a>
+        </h3>
+<p id="section-6.1-1">When the client attempts a SCION endpoint, it selects the candidate paths, in an order set by local policy, from the paths to the endpoint's AS that are eligible at that time. It selects no more than the Path Attempt Count. The default Path Attempt Count is 2, and values above 3 are <span class="bcp14">NOT RECOMMENDED</span> (<a href="#load" class="auto internal xref">Section 9.3</a>). If no path is eligible, the client skips the endpoint and attempts the next one at once.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">Without a more specific policy, a client <span class="bcp14">SHOULD</span> first select a path with the fewest AS hops, at random among equals. For each further candidate path, up to the Path Attempt Count, it <span class="bcp14">SHOULD</span> select the eligible path that has the least overlap with the paths already selected (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). Overlap is compared by the number of shared transit ASes, then of shared pairs of adjacent ASes, then of shared inter-AS links. A transit AS, a pair, or a link counts once, however many selected paths have it. Among paths of equal overlap, the client selects one with the fewest AS hops, at random among equals. Paths that traverse the same inter-AS links count as one path, and the client uses the one with the latest expiry.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">Router clocks need to agree with those of core ASes only to within minutes (Section 4.2.2.3 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span> and Section 7.3 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>), so a router can treat a path as expired before the client does. A client therefore <span class="bcp14">SHOULD NOT</span> select a path that expires within 5 minutes unless no other path is left.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<p id="section-6.1-4">The candidate paths of a SCION endpoint do not change once the client has started to attempt it. A client <span class="bcp14">MUST NOT</span> send on an expired path: it does not start an attempt on a candidate path that has expired, and an attempt in progress fails when its path expires.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="path-attempts">
+<section id="section-6.2">
+        <h3 id="name-attempts-over-paths">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-attempts-over-paths" class="section-name selfRef">Attempts over Paths</a>
+        </h3>
+<p id="section-6.2-1">Each connection attempt to a SCION endpoint uses one candidate path: the client sends every packet of the attempt on that path. In all other respects it is a connection attempt as in Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">The client starts an attempt on the first candidate path. Each time the Path Attempt Delay passes and no attempt has succeeded, it starts an attempt to the same endpoint on the next candidate path, until it has started an attempt on each candidate path. Each attempt is a separate connection (Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>).<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">The default Path Attempt Delay is 50 milliseconds (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). A client <span class="bcp14">MAY</span> use another value, for example one that it derives from historical round-trip time data (Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>). A client <span class="bcp14">MUST NOT</span> use a Path Attempt Delay below 10 milliseconds, the lower bound of Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> for the time between two attempts, and <span class="bcp14">SHOULD NOT</span> use one above the Connection Attempt Delay. The lower bound also applies between any of these attempts and an attempt to another endpoint.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">The attempts on candidate paths do not change the timing of other endpoints. Only the first attempt to a SCION endpoint sets the Next Connection Attempt Timer, and the attempts to one SCION endpoint count as one attempt for the Connection Attempt Delay Multiplier.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
+<p id="section-6.2-5">An attempt to a SCION endpoint succeeds as described in Section 6.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>. The client then cancels the other attempts, including those to the same SCION endpoint, as Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> specifies.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="transport">
+<section id="section-6.3">
+        <h3 id="name-transport-requirements">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-transport-requirements" class="section-name selfRef">Transport Requirements</a>
+        </h3>
+<p id="section-6.3-1">Attempts to one SCION endpoint share the client's SCION address and the destination SCION address and port. A client whose transport identifies connections by addresses and ports <span class="bcp14">MUST</span> use a different local port for each concurrent attempt to the same destination SCION address and port. TCP identifies connections in this way, and so does QUIC for a client that uses zero-length connection IDs (Sections 5.1 and 5.2.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-2">The server chooses the paths of its replies, which need not be the reverse (Section 2.4.4 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>) of the path of the attempt. The client <span class="bcp14">MUST</span> accept replies from the SCION address of the endpoint on any path. It <span class="bcp14">MUST</span> present the same server address to the transport regardless of the path a reply arrives on (Section 9 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>). A reply does not show that the reverse of its path carries the client's packets. The client therefore <span class="bcp14">MUST</span> continue to send on the path of the attempt until the attempt succeeds or fails.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
+<p id="section-6.3-3">When a QUIC client cancels an attempt, it <span class="bcp14">SHOULD</span> send a CONNECTION_CLOSE frame on the path of that attempt so that the server can release its state. Section 10.2.3 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span> permits this frame in an Initial packet, which the client uses as long as it has not sent a Handshake packet of that attempt (Section 17.2.2.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="early-data">
+<section id="section-6.4">
+        <h3 id="name-early-data">
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-early-data" class="section-name selfRef">Early Data</a>
+        </h3>
+<p id="section-6.4-1">Early data (QUIC 0-RTT data <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span> or other TLS early data <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>) that is sent in more than one attempt can be processed more than once (Section 8 of <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>). A client <span class="bcp14">SHOULD NOT</span> send the same early data in more than one attempt of a connection establishment. If the attempt that carried early data does not succeed, the client treats the early data as possibly processed. The application protocol decides whether the client sends that data again, as for rejected early data (Section 4.3.10 of <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>).<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scmp">
+<section id="section-6.5">
+        <h3 id="name-scmp-error-messages">
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-scmp-error-messages" class="section-name selfRef">SCMP Error Messages</a>
+        </h3>
+<p id="section-6.5-1">A client <span class="bcp14">SHOULD NOT</span> end an attempt because of a SCION Control Message Protocol (SCMP) error message (Section 6 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>). Section 8.3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> specifies no authentication for these messages and advises endpoints to treat them as weak hints. An AS on the path of an attempt could otherwise end that attempt with a forged message. A client whose attempts share a local port needs to ensure that such a message does not close the socket that they share.<a href="#section-6.5-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="scion-required">
+<section id="section-6.6">
+        <h3 id="name-applications-that-require-s">
+<a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-applications-that-require-s" class="section-name selfRef">Applications That Require SCION</a>
+        </h3>
+<p id="section-6.6-1">An application can require that its connection use SCION. The client then <span class="bcp14">MUST NOT</span> attempt IP endpoints. It waits for path lookups up to the limit of <a href="#path-lookup" class="auto internal xref">Section 3.3</a>.<a href="#section-6.6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="after-establishment">
+<section id="section-6.7">
+        <h3 id="name-after-establishment">
+<a href="#section-6.7" class="section-number selfRef">6.7. </a><a href="#name-after-establishment" class="section-name selfRef">After Establishment</a>
+        </h3>
+<p id="section-6.7-1">The procedure of this document ends when a connection is established. Its result is one connection on one path. Finding further paths, moving to another path, and using several paths at once belong to the transport. For QUIC, the multipath extension <span>[<a href="#RFC10069" class="cite xref">RFC10069</a>]</span> provides the means to use several paths in one connection, and leaves finding paths and the decision to open or close them to the application. Its use over SCION is not specified here.<a href="#section-6.7-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="config">
+<section id="section-7">
+      <h2 id="name-summary-of-configurable-val">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-summary-of-configurable-val" class="section-name selfRef">Summary of Configurable Values</a>
+      </h2>
+<p id="section-7-1">In addition to the values of Section 10 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>, this document defines the following values and their defaults. As that section allows, a client <span class="bcp14">MAY</span> use other values, within the limits stated in the sections referenced.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-2.1">
+          <p id="section-7-2.1.1">Path Attempt Count (<a href="#path-selection" class="auto internal xref">Section 6.1</a>): 2.<a href="#section-7-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-2.2">
+          <p id="section-7-2.2.1">Path Attempt Delay (<a href="#path-attempts" class="auto internal xref">Section 6.2</a>): 50 milliseconds.<a href="#section-7-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-2.3">
+          <p id="section-7-2.3.1">Address family order (<a href="#sorting" class="auto internal xref">Section 4</a>): SCION first.<a href="#section-7-2.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+</section>
+</div>
+<div id="experiment">
+<section id="section-8">
+      <h2 id="name-experiment-goals">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-experiment-goals" class="section-name selfRef">Experiment Goals</a>
+      </h2>
+<p id="section-8-1">This document is Experimental because attempting SCION addresses on several paths within HEv3 has not been deployed. The experiment affects clients that implement this document, the servers that they connect to over SCION, and the control services that answer their path lookups. A participating client that orders SCION first can delay its first attempt to an IP endpoint by up to the Resolution Delay, and by one Connection Attempt Delay for each SCION endpoint ordered before that IP endpoint.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">On a SCION testbed with failure injection and on a production SCION network, the experiment is to answer the following questions:<a href="#section-8-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8-3.1">
+          <p id="section-8-3.1.1">How long do path lookups take, with and without cached paths, and how often does the first attempt to an IP endpoint start before the lookup completes?<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-3.2">
+          <p id="section-8-3.2.1">What does ordering SCION first cost a connection that is established over IP, compared with ordering IP first?<a href="#section-8-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-3.3">
+          <p id="section-8-3.3.1">Does a second path pay off? Compare a Path Attempt Count of 1, 2, and 3 by the median and the 99th percentile of the connection establishment time, with all paths working and with the first path failing silently, that is, dropping all packets of the attempt. Also compare, under partial packet loss on the first path, a second attempt on a different path with a second attempt on the same path. Measure in production how often a first path fails silently.<a href="#section-8-3.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-3.4">
+          <p id="section-8-3.4.1">What is the right Path Attempt Delay? Compare 10, 50, 100, and 250 milliseconds by the same two times, and by the number of handshakes, the octets sent, and the server connection state for each established connection. Also test whether a delay derived from round-trip time data does better than a fixed one.<a href="#section-8-3.4.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-8-3.5">
+          <p id="section-8-3.5.1">Do the candidate paths fail together? Measure in production how many transit ASes, pairs of adjacent ASes, and inter-AS links the candidate paths share. Failures were too rare in production to count joint failures there (<a href="#results" class="auto internal xref">Section 8.1</a>), so measure on the testbed, with a failure injected at a transit AS and at an inter-AS link, how often no candidate path works.<a href="#section-8-3.5.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-8-4">For each connection establishment, the experiment records which attempt succeeded, how many attempts the client started and how many it cancelled, and how many handshakes the server completed.<a href="#section-8-4" class="pilcrow">¶</a></p>
+<p id="section-8-5">A Path Attempt Count of 2 is kept as the default if, compared with a Path Attempt Count of 1, it meets two conditions. First, with the first path failing silently, it lowers the 99th percentile of the connection establishment time by at least 100 milliseconds, the Minimum Connection Attempt Delay that Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> recommends. Second, with all paths working, it raises the median by no more than 2 milliseconds, which is about the variation between repeated runs on the testbed. The default Path Attempt Delay is kept if, in addition, the client starts no more than 1.1 attempts on average for each connection that it establishes over SCION with all paths working, that is, at most one further handshake for every ten connections. Otherwise these defaults change. The authors chose these three limits; they are not derived from measurements. The order of the address families is not subject to such a condition: only SCION attempts give the application a choice of path (<a href="#sorting" class="auto internal xref">Section 4</a>), and the experiment reports what ordering SCION first costs. The authors will report further results, and any change to the defaults, in a revision of this document.<a href="#section-8-5" class="pilcrow">¶</a></p>
+<div id="results">
+<section id="section-8.1">
+        <h3 id="name-results-so-far">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-results-so-far" class="section-name selfRef">Results So Far</a>
+        </h3>
+<p id="section-8.1-1">The testbed results come from the prototype of <a href="#implementation-status" class="auto internal xref">Appendix B</a> in a testbed of 12 SCION ASes, with 400 connection establishments for each configuration, and 200 for each configuration with an inter-AS link or an AS dropping packets. A handshake on a working path took about 28 milliseconds.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<p id="section-8.1-2">A path lookup took a median of 5 milliseconds with cached paths. It took 35 milliseconds when the client forced the path service to fetch the paths again, which is what "uncached" means in this section. The first attempt to an IP endpoint started before the lookup completed in at most 5.5% of connection establishments with cached paths and in 95.5% without.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
+<p id="section-8.1-3">Ordering SCION first was compared with ordering IP first by the median connection establishment time. With cached paths, the connection was established over SCION and took 7 milliseconds longer than with IP first. With uncached paths, the client waited the Resolution Delay of 25 milliseconds for the lookup and then established the connection over IP, 25 milliseconds later than with IP first. When no SCION attempt could succeed, the client established the connection over IP after one Connection Attempt Delay, 257 milliseconds later.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
+<p id="section-8.1-4">The times in <a href="#tab-count" class="auto internal xref">Table 1</a> and <a href="#tab-delay" class="auto internal xref">Table 2</a> are connection establishment times in milliseconds.<a href="#section-8.1-4" class="pilcrow">¶</a></p>
+<span id="name-path-attempt-count-with-a-p"></span><div id="tab-count">
+<table class="center" id="table-1">
+          <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-path-attempt-count-with-a-p" class="selfRef">Path Attempt Count, with a Path Attempt Delay of 50 milliseconds</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Path Attempt Count</th>
+              <th class="text-left" rowspan="1" colspan="1">1</th>
+              <th class="text-left" rowspan="1" colspan="1">2</th>
+              <th class="text-left" rowspan="1" colspan="1">3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Median, all paths working</td>
+              <td class="text-left" rowspan="1" colspan="1">35.6</td>
+              <td class="text-left" rowspan="1" colspan="1">34.9</td>
+              <td class="text-left" rowspan="1" colspan="1">34.5</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">99th percentile, first path failing silently</td>
+              <td class="text-left" rowspan="1" colspan="1">297.4</td>
+              <td class="text-left" rowspan="1" colspan="1">96.4</td>
+              <td class="text-left" rowspan="1" colspan="1">93.7</td>
+            </tr>
+          </tbody>
+        </table>
+</div>
+<p id="section-8.1-6">A count of 2 met both conditions above. A third path gained nothing.<a href="#section-8.1-6" class="pilcrow">¶</a></p>
+<span id="name-path-attempt-delay-with-a-p"></span><div id="tab-delay">
+<table class="center" id="table-2">
+          <caption>
+<a href="#table-2" class="selfRef">Table 2</a>:
+<a href="#name-path-attempt-delay-with-a-p" class="selfRef">Path Attempt Delay, with a Path Attempt Count of 2</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Path Attempt Delay (ms)</th>
+              <th class="text-left" rowspan="1" colspan="1">10</th>
+              <th class="text-left" rowspan="1" colspan="1">25</th>
+              <th class="text-left" rowspan="1" colspan="1">35</th>
+              <th class="text-left" rowspan="1" colspan="1">50</th>
+              <th class="text-left" rowspan="1" colspan="1">100</th>
+              <th class="text-left" rowspan="1" colspan="1">250</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Median, all paths working</td>
+              <td class="text-left" rowspan="1" colspan="1">34.7</td>
+              <td class="text-left" rowspan="1" colspan="1">34.4</td>
+              <td class="text-left" rowspan="1" colspan="1">34.8</td>
+              <td class="text-left" rowspan="1" colspan="1">34.9</td>
+              <td class="text-left" rowspan="1" colspan="1">34.9</td>
+              <td class="text-left" rowspan="1" colspan="1">34.3</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Median, first path failing silently</td>
+              <td class="text-left" rowspan="1" colspan="1">45.6</td>
+              <td class="text-left" rowspan="1" colspan="1">60.2</td>
+              <td class="text-left" rowspan="1" colspan="1">71.0</td>
+              <td class="text-left" rowspan="1" colspan="1">85.4</td>
+              <td class="text-left" rowspan="1" colspan="1">135.3</td>
+              <td class="text-left" rowspan="1" colspan="1">285.6</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Attempts started for each connection, all paths working</td>
+              <td class="text-left" rowspan="1" colspan="1">2.0</td>
+              <td class="text-left" rowspan="1" colspan="1">1.7</td>
+              <td class="text-left" rowspan="1" colspan="1">1.0</td>
+              <td class="text-left" rowspan="1" colspan="1">1.0</td>
+              <td class="text-left" rowspan="1" colspan="1">1.0</td>
+              <td class="text-left" rowspan="1" colspan="1">1.0</td>
+            </tr>
+          </tbody>
+        </table>
+</div>
+<p id="section-8.1-8">The server completed as many handshakes as the client started attempts. A delay of 10 milliseconds thus cost a second handshake for every connection and did not lower the median. With the first path failing silently, the median was the delay plus about 36 milliseconds. A delay of 50 milliseconds met the condition above for the delay.<a href="#section-8.1-8" class="pilcrow">¶</a></p>
+<p id="section-8.1-9">A delay derived from round-trip time data was tested as the smoothed round-trip time plus twice its variation, taken from earlier connections on the same path, and 50 milliseconds without such data. It had a median of 38 milliseconds. With all paths working, the client started no second attempt and the median did not change. With the first path failing silently, the median was 73.4 milliseconds, 12 milliseconds lower than with the fixed delay.<a href="#section-8.1-9" class="pilcrow">¶</a></p>
+<p id="section-8.1-10">A second attempt on the same path was compared with one on a different path, with a Path Attempt Count of 2. With all paths working, the times were the same. A path that drops all packets fails every attempt on it, so the two were compared with 30% packet loss on the first inter-AS link of the first path: the 99th percentile was 204 milliseconds on the same path and 98 milliseconds on a different path.<a href="#section-8.1-10" class="pilcrow">¶</a></p>
+<p id="section-8.1-11">To test whether the candidate paths fail together, one of the three inter-AS links of the client's AS was set to drop all packets. The first path used that link in about one third of connection establishments. With a Path Attempt Count of 1, these (70 of 195) were established over IP after one Connection Attempt Delay. With a count of 2 or 3, a candidate path worked in every connection establishment, because the candidate paths shared no transit AS and no inter-AS link. Dropping all packets at a neighboring transit AS gave the same result, because every path through that AS uses the same link of the client's AS. A failure further along a path has not been tested.<a href="#section-8.1-11" class="pilcrow">¶</a></p>
+<p id="section-8.1-12">The production results come from one AS of the SCIERA network <span>[<a href="#SCIERA" class="cite xref">SCIERA</a>]</span> in November 2026.<a href="#section-8.1-12" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8.1-13.1">
+            <p id="section-8.1-13.1.1">78 ASes were reachable, over 19,786 paths in total and between 1 and 1,600 paths each. The round-trip time to the last router of the first path selected (<a href="#path-selection" class="auto internal xref">Section 6.1</a>) had a median of 39 milliseconds and ranged from under 1 to 155 milliseconds. For 87% of these paths, the round-trip time plus 5 milliseconds was at most 50 milliseconds.<a href="#section-8.1-13.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-13.2">
+            <p id="section-8.1-13.2.1">In two passes of probes about 70 minutes apart, every path that was probed answered. In a separate measurement of up to 6 paths to each AS, 2 of 1,272 measurements got no answer, and both paths answered before and after. Silent failure of a path was thus rare.<a href="#section-8.1-13.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-13.3">
+            <p id="section-8.1-13.3.1">A second path was faster than the first by more than 10 milliseconds in fewer than 1% of selections. Attempts on several paths therefore do not find a faster path; they protect against a path that does not work.<a href="#section-8.1-13.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-13.4">
+            <p id="section-8.1-13.4.1">When the second path was selected by shared inter-AS links alone, it traversed on average 94% of the pairs of adjacent ASes of the first. With the selection of <a href="#path-selection" class="auto internal xref">Section 6.1</a>, it traversed 72% of them and 93% of the transit ASes of the first, had more AS hops in 71% of selections, and had a median round-trip time 0.5 milliseconds higher. A second path that shared no inter-AS link with the first existed for 2 of the 78 ASes.<a href="#section-8.1-13.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-13.5">
+            <p id="section-8.1-13.5.1">Path lookups took a median of 2 milliseconds with cached paths. Lookups that the client forced the path service to repeat were measured for 14 ASes. Their median was between 8 and 19 milliseconds for 7 of these ASes, 377 milliseconds for one, and 9 seconds for 6, which exceeds the limit of <a href="#path-lookup" class="auto internal xref">Section 3.3</a>.<a href="#section-8.1-13.5.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="security">
+<section id="section-9">
+      <h2 id="name-security-considerations">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-9-1">The security considerations of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> and <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> apply.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-9-2">This document relies on SCION path authorization (Section 7.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>), which ensures that packets follow paths that the ASes on them authorized, and on TLS to authenticate the server. Attacks on the SCION control plane are out of scope except as they affect path selection.<a href="#section-9-2" class="pilcrow">¶</a></p>
+<div id="several-paths">
+<section id="section-9.1">
+        <h3 id="name-attempts-over-several-paths">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-attempts-over-several-paths" class="section-name selfRef">Attempts over Several Paths</a>
+        </h3>
+<p id="section-9.1-1">Each attempt exposes the client's first flight to the ASes on its path. QUIC Initial packets are protected with keys that anyone who sees the client's first Initial packet can derive (Section 5.2 of <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span>). Each of these ASes can therefore read the TLS ClientHello, including the server name unless Encrypted Client Hello <span>[<a href="#RFC9849" class="cite xref">RFC9849</a>]</span> is used. The client starts an attempt on a further candidate path whenever the earlier attempt is late, so an AS on the earlier path can extend this exposure to a further path by delaying packets.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+<p id="section-9.1-2">An AS on the path of an attempt, or on a path that the server chooses for its replies, can make that attempt fail by dropping its packets. An AS on the path of an attempt can also race forged Initial packets (Section 21.1.1.3 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>) or forge SCMP error messages (<a href="#scmp" class="auto internal xref">Section 6.5</a>). None of these actions can make an attempt succeed if success requires a completed QUIC or TLS handshake (Section 6.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), because that handshake authenticates the server. By making the other attempts fail, an AS can make the client use a path that the AS is on.<a href="#section-9.1-2" class="pilcrow">¶</a></p>
+<p id="section-9.1-3">An AS on the path of an attempt can replace the remaining path in the header of the attempt's packets with other authorized segments, and restore it on replies (Section 7.2.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>). The success of an attempt therefore shows that the server was reached, not that the packets followed the candidate path.<a href="#section-9.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="selection-security">
+<section id="section-9.2">
+        <h3 id="name-path-selection">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-path-selection" class="section-name selfRef">Path Selection</a>
+        </h3>
+<p id="section-9.2-1">The hops and inter-AS links that the default selection counts are declared by the ASes on the path. ASes can announce many parallel links or fake peering links (Section 8.3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>) so that their paths appear short or disjoint from others and are selected. Paths that differ only in the links between the same two ASes can fail together, which is why the default selection counts transit ASes and pairs of adjacent ASes before links.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="load">
+<section id="section-9.3">
+        <h3 id="name-load">
+<a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-load" class="section-name selfRef">Load</a>
+        </h3>
+<p id="section-9.3-1">Each attempt costs the client and the server a handshake: a key exchange, connection state, and the first flights of both. A Path Attempt Delay shorter than the time in which the first attempt succeeds makes every connection over SCION cost more than one handshake, up to one for each candidate path (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). An attempt that the client cancels holds server state until the server receives the client's CONNECTION_CLOSE frame (<a href="#transport" class="auto internal xref">Section 6.3</a>) or abandons the handshake. A server that limits the concurrent handshakes of one client address needs to allow for one handshake for each candidate path.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
+<p id="section-9.3-2">Attempts to one SCION endpoint share the client's and the server's hosts and can share links within both ASes. When packets are lost there, more attempts add load and are no more likely to succeed. This is why the Path Attempt Count is small.<a href="#section-9.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="downgrade">
+<section id="section-9.4">
+        <h3 id="name-downgrade">
+<a href="#section-9.4" class="section-number selfRef">9.4. </a><a href="#name-downgrade" class="section-name selfRef">Downgrade</a>
+        </h3>
+<p id="section-9.4-1">An attacker that blocks SCION packets or path lookups, or that makes the attempts on all paths fail, can make the client connect over IP and lose the choice of path that SCION provides. The client's own control service can do the same by withholding paths, or by delaying its answer beyond the Resolution Delay (<a href="#starting" class="auto internal xref">Section 5</a>). Applications that require SCION exclude IP endpoints (<a href="#scion-required" class="auto internal xref">Section 6.6</a>).<a href="#section-9.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="privacy-considerations">
+<section id="section-10">
+      <h2 id="name-privacy-considerations">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-privacy-considerations" class="section-name selfRef">Privacy Considerations</a>
+      </h2>
+<p id="section-10-1">Path lookups disclose the destination ISD-AS to the client's control service and, for uncached paths, to core ASes of the destination ISD; core ASes of the client's ISD learn the destination ISD (Section 6 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>). Because a client looks up paths when it creates a SCION endpoint (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>), it also discloses the destination for endpoints that it does not attempt and for services that it then reaches over IP.<a href="#section-10-1" class="pilcrow">¶</a></p>
+<p id="section-10-2">Each attempt exposes the client's SCION address and the ClientHello to the ASes on its path (<a href="#several-paths" class="auto internal xref">Section 9.1</a>). A Path Attempt Count of 1 limits this exposure to one path for each SCION endpoint. Attempts to one SCION endpoint carry the same two SCION addresses, so an observer on more than one of their paths can link them.<a href="#section-10-2" class="pilcrow">¶</a></p>
+<p id="section-10-3">Historical data about paths that the client keeps is partitioned as Sections 5.3 and 9 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> specify. A path cache shared with other applications, such as that of a local path service, is outside the client's control.<a href="#section-10-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana">
+<section id="section-11">
+      <h2 id="name-iana-considerations">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-11-1">This document has no IANA actions.<a href="#section-11-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-12">
+      <h2 id="name-references">
+<a href="#section-12" class="section-number selfRef">12. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-12.1">
+        <h3 id="name-normative-references">
+<a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="I-D.dekater-scion-controlplane">[I-D.dekater-scion-controlplane]</dt>
+        <dd>
+<span class="refAuthor">de Kater, C.</span>, <span class="refAuthor">Rustignoli, N.</span>, and <span class="refAuthor">S. Hitz</span>, <span class="refTitle">"SCION Control Plane"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-dekater-scion-controlplane-18</span>, <time datetime="2026-04-30" class="refDate">30 April 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-dekater-scion-controlplane-18">https://datatracker.ietf.org/doc/html/draft-dekater-scion-controlplane-18</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.dekater-scion-dataplane">[I-D.dekater-scion-dataplane]</dt>
+        <dd>
+<span class="refAuthor">de Kater, C.</span>, <span class="refAuthor">Rustignoli, N.</span>, <span class="refAuthor">Hugly, J.</span>, and <span class="refAuthor">S. Hitz</span>, <span class="refTitle">"SCION Data Plane"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-dekater-scion-dataplane-15</span>, <time datetime="2026-06-24" class="refDate">24 June 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-dekater-scion-dataplane-15">https://datatracker.ietf.org/doc/html/draft-dekater-scion-dataplane-15</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.ietf-happy-happyeyeballs-v3">[I-D.ietf-happy-happyeyeballs-v3]</dt>
+        <dd>
+<span class="refAuthor">Pauly, T.</span>, <span class="refAuthor">Schinazi, D.</span>, <span class="refAuthor">Jaju, N.</span>, and <span class="refAuthor">K. Ishibashi</span>, <span class="refTitle">"Happy Eyeballs Version 3: Better Connectivity Using Concurrency"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-happy-happyeyeballs-v3-05</span>, <time datetime="2026-11-02" class="refDate">2 November 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-happy-happyeyeballs-v3-05">https://datatracker.ietf.org/doc/html/draft-ietf-happy-happyeyeballs-v3-05</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.john-scion-svcb">[I-D.john-scion-svcb]</dt>
+        <dd>
+<span class="refAuthor">John, T.</span>, <span class="refAuthor">van Bommel, J.</span>, <span class="refAuthor">Zäschke, T.</span>, <span class="refAuthor">Schulz, L.</span>, and <span class="refAuthor">N. Rustignoli</span>, <span class="refTitle">"Publishing SCION Endpoint Addresses in DNS Service Binding (SVCB) Records"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-john-scion-svcb-00</span>, <time datetime="2026-11-16" class="refDate">16 November 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-john-scion-svcb-00">https://datatracker.ietf.org/doc/html/draft-john-scion-svcb-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC6724">[RFC6724]</dt>
+        <dd>
+<span class="refAuthor">Thaler, D., Ed.</span>, <span class="refAuthor">Draves, R.</span>, <span class="refAuthor">Matsumoto, A.</span>, and <span class="refAuthor">T. Chown</span>, <span class="refTitle">"Default Address Selection for Internet Protocol Version 6 (IPv6)"</span>, <span class="seriesInfo">RFC 6724</span>, <span class="seriesInfo">DOI 10.17487/RFC6724</span>, <time datetime="2012-09" class="refDate">September 2012</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc6724">https://www.rfc-editor.org/rfc/rfc6724</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9000">[RFC9000]</dt>
+        <dd>
+<span class="refAuthor">Iyengar, J., Ed.</span> and <span class="refAuthor">M. Thomson, Ed.</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="seriesInfo">RFC 9000</span>, <span class="seriesInfo">DOI 10.17487/RFC9000</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9000">https://www.rfc-editor.org/rfc/rfc9000</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9001">[RFC9001]</dt>
+        <dd>
+<span class="refAuthor">Thomson, M., Ed.</span> and <span class="refAuthor">S. Turner, Ed.</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="seriesInfo">RFC 9001</span>, <span class="seriesInfo">DOI 10.17487/RFC9001</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9001">https://www.rfc-editor.org/rfc/rfc9001</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9460">[RFC9460]</dt>
+        <dd>
+<span class="refAuthor">Schwartz, B.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Service Binding and Parameter Specification via the DNS (SVCB and HTTPS Resource Records)"</span>, <span class="seriesInfo">RFC 9460</span>, <span class="seriesInfo">DOI 10.17487/RFC9460</span>, <time datetime="2023-11" class="refDate">November 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9460">https://www.rfc-editor.org/rfc/rfc9460</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9846">[RFC9846]</dt>
+      <dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 9846</span>, <span class="seriesInfo">DOI 10.17487/RFC9846</span>, <time datetime="2026-07" class="refDate">July 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9846">https://www.rfc-editor.org/rfc/rfc9846</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-12.2">
+        <h3 id="name-informative-references">
+<a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC7942">[RFC7942]</dt>
+        <dd>
+<span class="refAuthor">Sheffer, Y.</span> and <span class="refAuthor">A. Farrel</span>, <span class="refTitle">"Improving Awareness of Running Code: The Implementation Status Section"</span>, <span class="seriesInfo">BCP 205</span>, <span class="seriesInfo">RFC 7942</span>, <span class="seriesInfo">DOI 10.17487/RFC7942</span>, <time datetime="2016-07" class="refDate">July 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7942">https://www.rfc-editor.org/rfc/rfc7942</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9217">[RFC9217]</dt>
+        <dd>
+<span class="refAuthor">Trammell, B.</span>, <span class="refTitle">"Current Open Questions in Path-Aware Networking"</span>, <span class="seriesInfo">RFC 9217</span>, <span class="seriesInfo">DOI 10.17487/RFC9217</span>, <time datetime="2022-03" class="refDate">March 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9217">https://www.rfc-editor.org/rfc/rfc9217</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9849">[RFC9849]</dt>
+        <dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refAuthor">Oku, K.</span>, <span class="refAuthor">Sullivan, N.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"TLS Encrypted Client Hello"</span>, <span class="seriesInfo">RFC 9849</span>, <span class="seriesInfo">DOI 10.17487/RFC9849</span>, <time datetime="2026-03" class="refDate">March 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9849">https://www.rfc-editor.org/rfc/rfc9849</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC10069">[RFC10069]</dt>
+        <dd>
+<span class="refAuthor">Liu, Y., Ed.</span>, <span class="refAuthor">Ma, Y.</span>, <span class="refAuthor">De Coninck, Q., Ed.</span>, <span class="refAuthor">Bonaventure, O.</span>, <span class="refAuthor">Huitema, C.</span>, and <span class="refAuthor">M. Kühlewind, Ed.</span>, <span class="refTitle">"Managing Multiple Paths for a QUIC Connection"</span>, <span class="seriesInfo">RFC 10069</span>, <span class="seriesInfo">DOI 10.17487/RFC10069</span>, <time datetime="2026-11" class="refDate">November 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc10069">https://www.rfc-editor.org/rfc/rfc10069</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="SCIERA">[SCIERA]</dt>
+        <dd>
+<span class="refAuthor">SCIERA</span>, <span class="refTitle">"SCION Education, Research and Academic Infrastructure (SCIERA)"</span>, <time datetime="2026" class="refDate">2026</time>, <span>&lt;<a href="https://sciera.readthedocs.io/en/latest/">https://sciera.readthedocs.io/en/latest/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="SCION-HEV3">[SCION-HEV3]</dt>
+        <dd>
+<span class="refAuthor">netsys-lab</span>, <span class="refTitle">"scion-hev3: Go client library for SCION and IP endpoints, commit d461073"</span>, <time datetime="2026-11" class="refDate">November 2026</time>, <span>&lt;<a href="https://github.com/netsys-lab/scion-hev3/tree/d46107329e06afba4fcd76a99b1cfef3810c8c73">https://github.com/netsys-lab/scion-hev3/tree/d46107329e06afba4fcd76a99b1cfef3810c8c73</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="SCION-V0.15.1">[SCION-V0.15.1]</dt>
+      <dd>
+<span class="refAuthor">SCION Association</span>, <span class="refTitle">"SCION reference implementation, release v0.15.1"</span>, <time datetime="2026-08" class="refDate">August 2026</time>, <span>&lt;<a href="https://github.com/scionproto/scion/releases/tag/v0.15.1">https://github.com/scionproto/scion/releases/tag/v0.15.1</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="design-rationale">
+<section id="appendix-A">
+      <h2 id="name-design-rationale">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-design-rationale" class="section-name selfRef">Design Rationale</a>
+      </h2>
+<span class="break"></span><dl class="dlParallel" id="appendix-A-1">
+        <dt id="appendix-A-1.1">Separate connections:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-1.2">
+          <p id="appendix-A-1.2.1">Each attempt on a path is an ordinary connection, so the rules of HEv3 for success and cancellation apply as they are, and neither the transport nor the server needs to change. The cost is a handshake and server state for each attempt after the first. Racing paths within one QUIC connection, by copying its datagrams to further paths below the transport, would avoid that cost. That approach is contrary to Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>, hides the copies from congestion control and round-trip time estimation, and lets the server's choice of reply path decide which path completes the handshake.<a href="#appendix-A-1.2.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-1.3">Paths that differ:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-1.4">
+          <p id="appendix-A-1.4.1">The first path has the fewest AS hops because each AS and each inter-AS link adds delay. A second attempt adds little if its path shares most links with the first. The overlap is counted from the widest scope of failure to the narrowest. The failure of a transit AS affects every path through it. Parallel links between the same pair of adjacent ASes can fail together (<a href="#selection-security" class="auto internal xref">Section 9.2</a>). An inter-AS link is the narrowest scope. Section 2.3.3 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> makes a similar distinction, between AS-disjoint and link-disjoint paths, for the selection of path segments. The selection ranks partial overlap because disjoint paths were rare in production, where selection by links alone mostly chose parallel links (<a href="#results" class="auto internal xref">Section 8.1</a>). The default Path Attempt Count of 2 gives the client one alternative; a third gained nothing in the testbed (<a href="#results" class="auto internal xref">Section 8.1</a>).<a href="#appendix-A-1.4.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-1.5">A further path after 50 milliseconds:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-1.6">
+          <p id="appendix-A-1.6.1">An attempt on a working path succeeds after about one round-trip time. A client that waits longer than that before it starts an attempt on a further path makes one handshake when the first path works, and loses little when it does not: in the testbed, the connection establishment time with a failing first path was the Path Attempt Delay plus the time on a working path (<a href="#results" class="auto internal xref">Section 8.1</a>). Starting the attempts 10 milliseconds apart cost a second handshake for every connection in the testbed, and in production the selected paths differed too little in round-trip time for this to find a faster one (<a href="#results" class="auto internal xref">Section 8.1</a>). The default is a fixed value because a fixed value needs no data about the destination. A delay of 50 milliseconds exceeded the round-trip time plus 5 milliseconds for 87% of the first paths selected in production. To a destination with a longer round-trip time, the client starts the second attempt even when the first path works; the Path Attempt Count bounds that cost, and a client can avoid it with a delay that it derives from round-trip time data. Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> permits a delay below the Minimum Connection Attempt Delay, down to 10 milliseconds. That minimum guards against congestion collapse under high packet loss; here the Path Attempt Count bounds the attempts started together.<a href="#appendix-A-1.6.1" class="pilcrow">¶</a></p>
+</dd>
+        <dd class="break"></dd>
+<dt id="appendix-A-1.7">Path lookups within the Resolution Delay:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-A-1.8">
+          <p id="appendix-A-1.8.1">A lookup answered from the cache of a local path service took a median of 5 milliseconds in the testbed and 2 milliseconds in production. An uncached lookup took a median of 35 milliseconds in the testbed and, in production, between 8 milliseconds and 9 seconds depending on the destination AS (<a href="#results" class="auto internal xref">Section 8.1</a>). Waiting up to the Resolution Delay, 25 milliseconds by default, adds no parameter and covers most cached lookups when the SVCB or HTTPS answer arrives no later than the first IP answer. When paths are not cached, the first connection can go over IP and later ones over SCION.<a href="#appendix-A-1.8.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="implementation-status">
+<section id="appendix-B">
+      <h2 id="name-implementation-status">
+<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-implementation-status" class="section-name selfRef">Implementation Status</a>
+      </h2>
+<p id="appendix-B-1">(RFC Editor: please remove this section before publication.)<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<p id="appendix-B-2">This section records the status of known implementations as of November 2026, following <span>[<a href="#RFC7942" class="cite xref">RFC7942</a>]</span>.<a href="#appendix-B-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="appendix-B-3">
+        <dt id="appendix-B-3.1">scion-hev3 <span>[<a href="#SCION-HEV3" class="cite xref">SCION-HEV3</a>]</span>:</dt>
+        <dd style="margin-left: 1.5em" id="appendix-B-3.2">
+          <p id="appendix-B-3.2.1">A research prototype in Go on release v0.15.1 of the SCION reference implementation <span>[<a href="#SCION-V0.15.1" class="cite xref">SCION-V0.15.1</a>]</span>. Contact: Tony John. Last updated: November 2026.<a href="#appendix-B-3.2.1" class="pilcrow">¶</a></p>
+</dd>
+      <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-C">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Tony John</span></div>
+<div dir="auto" class="left"><span class="org">OVGU Magdeburg</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:tony.john@ovgu.de" class="email">tony.john@ovgu.de</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Jelte van Bommel</span></div>
+<div dir="auto" class="left"><span class="org">ETH Zurich</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:jelte.vanbommel@inf.ethz.ch" class="email">jelte.vanbommel@inf.ethz.ch</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Tilmann Zäschke</span></div>
+<div dir="auto" class="left"><span class="org">ETH Zurich</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:tilmann.zaeschke@inf.ethz.ch" class="email">tilmann.zaeschke@inf.ethz.ch</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Lars-Christian Schulz</span></div>
+<div dir="auto" class="left"><span class="org">OVGU Magdeburg</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:lschulz@ovgu.de" class="email">lschulz@ovgu.de</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Nicola Rustignoli</span></div>
+<div dir="auto" class="left"><span class="org">SCION Association</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:nic@scion.org" class="email">nic@scion.org</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
