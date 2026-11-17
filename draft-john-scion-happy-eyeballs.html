@@ -11,7 +11,7 @@
 <meta content="Lars-Christian Schulz" name="author">
 <meta content="Nicola Rustignoli" name="author">
 <meta content="
-       Happy Eyeballs Version 3 uses the choice of addresses that a service offers: it races connection attempts to IPv6 and IPv4 addresses. SCION (Scalability, Control, and Isolation On Next-generation networks) is a path-aware inter-domain network architecture in which a client also has a choice of paths to an address. This document specifies how a Happy Eyeballs client uses SCION addresses published in DNS Service Binding (SVCB) and HTTPS records. The client treats SCION as a third address family. It selects a small number of paths that differ from each other and attempts a SCION address on the first. Each time a short delay passes and no attempt has succeeded, it starts an attempt on the next path, while the earlier attempts continue. The number of paths (2 by default) and the delay (50 milliseconds by default) are configurable. Each attempt is a separate connection, and the client uses the first attempt that succeeds. The attempts on further paths do not delay attempts to other addresses. 
+       SCION (Scalability, Control, and Isolation On Next-generation networks) is a path-aware inter-domain network architecture in which an endpoint chooses the path of its packets. A service can publish SCION addresses next to its IPv4 and IPv6 addresses in DNS Service Binding (SVCB) and HTTPS records. This document specifies how a Happy Eyeballs Version 3 client uses these addresses. SCION addresses form a third address family, so that the client connects over SCION where SCION works and over IP where it does not. Because one path can fail while others work, the client attempts a SCION address on up to three paths that differ from each other (two by default). It starts these attempts a short delay apart (50 milliseconds by default), each as a separate connection, and uses the first attempt that succeeds. This document is Experimental. It states what is to be measured to confirm or change these defaults. 
     " name="description">
 <meta content="xml2rfc 3.35.0" name="generator">
 <meta content="Happy Eyeballs" name="keyword">
@@ -1052,7 +1052,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">John, et al.</td>
-<td class="center">Expires 20 May 2027</td>
+<td class="center">Expires 21 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1065,12 +1065,12 @@ svg {
 <dd class="internet-draft">draft-john-scion-happy-eyeballs-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-11-16" class="published">16 November 2026</time>
+<time datetime="2026-11-17" class="published">17 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Experimental</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-20">20 May 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-21">21 May 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1099,7 +1099,7 @@ svg {
 <h1 id="title">SCION in Happy Eyeballs Version 3</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">Happy Eyeballs Version 3 uses the choice of addresses that a service offers: it races connection attempts to IPv6 and IPv4 addresses. SCION (Scalability, Control, and Isolation On Next-generation networks) is a path-aware inter-domain network architecture in which a client also has a choice of paths to an address. This document specifies how a Happy Eyeballs client uses SCION addresses published in DNS Service Binding (SVCB) and HTTPS records. The client treats SCION as a third address family. It selects a small number of paths that differ from each other and attempts a SCION address on the first. Each time a short delay passes and no attempt has succeeded, it starts an attempt on the next path, while the earlier attempts continue. The number of paths (2 by default) and the delay (50 milliseconds by default) are configurable. Each attempt is a separate connection, and the client uses the first attempt that succeeds. The attempts on further paths do not delay attempts to other addresses.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">SCION (Scalability, Control, and Isolation On Next-generation networks) is a path-aware inter-domain network architecture in which an endpoint chooses the path of its packets. A service can publish SCION addresses next to its IPv4 and IPv6 addresses in DNS Service Binding (SVCB) and HTTPS records. This document specifies how a Happy Eyeballs Version 3 client uses these addresses. SCION addresses form a third address family, so that the client connects over SCION where SCION works and over IP where it does not. Because one path can fail while others work, the client attempts a SCION address on up to three paths that differ from each other (two by default). It starts these attempts a short delay apart (50 milliseconds by default), each as a separate connection, and uses the first attempt that succeeds. This document is Experimental. It states what is to be measured to confirm or change these defaults.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1130,7 +1130,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 20 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 21 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1195,16 +1195,13 @@ svg {
                 <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-transport-requirements" class="internal xref">Transport Requirements</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
-                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-early-data" class="internal xref">Early Data</a></p>
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-scmp-error-messages" class="internal xref">SCMP Error Messages</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.5">
-                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-scmp-error-messages" class="internal xref">SCMP Error Messages</a></p>
+                <p id="section-toc.1-1.6.2.5.1"><a href="#section-6.5" class="auto internal xref">6.5</a>.  <a href="#name-applications-that-require-s" class="internal xref">Applications That Require SCION</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.6">
-                <p id="section-toc.1-1.6.2.6.1"><a href="#section-6.6" class="auto internal xref">6.6</a>.  <a href="#name-applications-that-require-s" class="internal xref">Applications That Require SCION</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.7">
-                <p id="section-toc.1-1.6.2.7.1"><a href="#section-6.7" class="auto internal xref">6.7</a>.  <a href="#name-after-establishment" class="internal xref">After Establishment</a></p>
+                <p id="section-toc.1-1.6.2.6.1"><a href="#section-6.6" class="auto internal xref">6.6</a>.  <a href="#name-after-establishment" class="internal xref">After Establishment</a></p>
 </li>
             </ul>
 </li>
@@ -1271,10 +1268,10 @@ svg {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">SCION <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span> is a path-aware inter-domain network architecture <span>[<a href="#RFC9217" class="cite xref">RFC9217</a>]</span>. A source endpoint looks up paths to the destination Autonomous System (AS) and puts the chosen path into each packet. <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> defines the "scion" SvcParamKey, which publishes the SCION addresses of a service endpoint in SVCB and HTTPS records <span>[<a href="#RFC9460" class="cite xref">RFC9460</a>]</span>. Happy Eyeballs Version 3 (HEv3) <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> does not consider SCION addresses.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">HEv3 uses the choice of addresses that a service offers. SCION adds a second choice, the choice of paths. A client usually knows several paths to one SCION address, and these paths cross different ASes and links. One path can work when another does not.<a href="#section-1-2" class="pilcrow">¶</a></p>
-<p id="section-1-3">This document lets an HEv3 client use both choices. A SCION address is one more endpoint in the HEv3 list of endpoints. When its turn comes, the client selects a small number of paths that differ from each other, at most the Path Attempt Count, and starts an attempt on the first. Each time the Path Attempt Delay passes and no attempt has succeeded, the client starts an attempt on the next of these paths, while the earlier attempts continue. Each attempt is a separate connection, and the client uses the first attempt that succeeds. When the first path works, the client normally makes only one handshake. The attempts on further paths do not delay attempts to other endpoints.<a href="#section-1-3" class="pilcrow">¶</a></p>
-<p id="section-1-4">This document covers connection establishment only (<a href="#after-establishment" class="auto internal xref">Section 6.7</a>). The rules of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> apply unless this document says otherwise. This document does not update HEv3. A client without SCION connectivity ignores the "scion" key.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-1">SCION (Scalability, Control, and Isolation On Next-generation networks) <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span> is a path-aware inter-domain network architecture <span>[<a href="#RFC9217" class="cite xref">RFC9217</a>]</span>. A source endpoint looks up paths to the destination Autonomous System (AS) and puts the chosen path into each packet. <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> defines the "scion" SvcParamKey, which publishes the SCION addresses of a service endpoint in DNS Service Binding (SVCB) and HTTPS records <span>[<a href="#RFC9460" class="cite xref">RFC9460</a>]</span>. Happy Eyeballs Version 3 (HEv3) <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> does not consider SCION addresses.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">HEv3 uses the choice of addresses that a service offers. SCION adds a second choice, the choice of paths. A client usually knows several paths to one SCION address, and these paths cross different ASes and links. One path can work when another does not. A client that attempts a SCION address on a single path falls back to IP when that path does not work, and the application then loses the choice of path although other paths to the same address work.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document lets an HEv3 client use both choices. A SCION address is one more endpoint in the HEv3 list of endpoints. When its turn comes, the client attempts it on a small number of paths that differ from each other, one after another and a short delay apart, each as a separate connection (<a href="#attempts" class="auto internal xref">Section 6</a>). When the first path works and the handshake on it completes within that delay, the client makes only one handshake. The attempts on further paths do not delay attempts to other endpoints.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">This document covers connection establishment only (<a href="#after-establishment" class="auto internal xref">Section 6.6</a>). The rules of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> apply unless this document says otherwise. This document does not update HEv3: a client without SCION connectivity ignores the "scion" key, and nothing changes for it.<a href="#section-1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1382,10 +1379,10 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <h3 id="name-path-lookup">
 <a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-path-lookup" class="section-name selfRef">Path Lookup</a>
         </h3>
-<p id="section-3.3-1">An IP address, whether from an address record or from a hint, is usable as soon as the client receives it. A SCION address is usable only when the client has a path to its AS. When the client creates a SCION endpoint, it therefore starts a path lookup for the endpoint's ISD-AS. SCION endpoints with the same ISD-AS share one lookup. A lookup can be answered from a cache, for example that of a path service on the client's host (a local path service). The limit on the number of destination ASes for which a client looks up paths (Section 5.4 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>) applies.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
-<p id="section-3.3-2">A path is eligible if it has not expired and its MTU (Section 3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>) is at least the size of the largest SCION packet that the client sends on it before the handshake completes, without underlay encapsulation. For QUIC, the largest of these packets carries a UDP payload of at least 1200 octets (Section 14.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-3.3-2" class="pilcrow">¶</a></p>
-<p id="section-3.3-3">A SCION endpoint enters the list of endpoints when its path lookup has returned at least one eligible path. If connection attempts have already started, the endpoint is added as Section 7 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> describes. A SCION endpoint in the client's own AS needs no lookup and enters the list at once. Its only path is the empty path (Section 2.4.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>), which has no expiry and has the MTU of the client's AS.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
-<p id="section-3.3-4">A client gives up on a path lookup that has not completed within 2 seconds. This limit bounds how long a client with no other endpoint waits (<a href="#starting" class="auto internal xref">Section 5</a>). If the lookup fails or returns no eligible path, the client discards the SCION endpoint.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+<p id="section-3.3-1">An IP address, whether from an address record or from a hint, can be attempted as soon as the client receives it. A SCION address can be attempted only when the client has a path to its AS. When the client creates a SCION endpoint, it therefore starts a path lookup for the endpoint's ISD-AS. SCION endpoints with the same ISD-AS share one lookup. A lookup can be answered from a cache, for example that of a path service on the client's host (a local path service). The limit on the number of destination ASes for which a client looks up paths (Section 5.4 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>) applies.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">A path is eligible if it has not expired and its maximum transmission unit (MTU, Section 3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>) is at least the size, without underlay encapsulation, of the largest SCION packet that the client sends on it before the handshake completes. For QUIC, the largest of these packets carries a UDP payload of at least 1200 octets (Section 14.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">A SCION endpoint enters the list of endpoints when its path lookup has returned at least one eligible path. If connection attempts have already started, the endpoint is added as Section 7 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> describes. A SCION endpoint in the client's own AS needs no lookup and enters the list at once. Its only path is the empty path (Section 2.4.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>). This path has no expiry, and its MTU is that of the client's AS.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+<p id="section-3.3-4">By default, a client gives up on a path lookup that has not completed within 2 seconds. This limit bounds how long a client with no other endpoint waits. If the lookup fails or returns no eligible path, the client discards the SCION endpoint.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1395,10 +1392,11 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-sorting-endpoints">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-sorting-endpoints" class="section-name selfRef">Sorting Endpoints</a>
       </h2>
-<p id="section-4-1">SCION endpoints are grouped by application protocol and security requirements (Section 5.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) and by service priority (Section 5.2 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) in the same way as the IP endpoints of the same record.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">A SCION endpoint is grouped by its application protocols (<a href="#scion-endpoints" class="auto internal xref">Section 3.2</a>) and security requirements (Section 5.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) and by the service priority of its record (Section 5.2 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), as an IP endpoint is.<a href="#section-4-1" class="pilcrow">¶</a></p>
 <p id="section-4-2">Within a group, the SCION endpoints form a third address family. Destination Address Selection <span>[<a href="#RFC6724" class="cite xref">RFC6724</a>]</span> (Section 5.3 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>) orders the IP endpoints only. A client orders the SCION endpoints among themselves at random, as Section 3.3 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> recommends, unless local policy sets another order.<a href="#section-4-2" class="pilcrow">¶</a></p>
-<p id="section-4-3">By default, a client orders the address families as SCION first, then the family of the first IP endpoint after Destination Address Selection, then the other IP family. Only SCION attempts give the application a choice of path; <a href="#results" class="auto internal xref">Section 8.1</a> reports what this order costs. A client whose local policy or application prefers IP orders SCION last instead. In both cases, the client interleaves the three families as Section 5.3 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> interleaves two, starting with as many endpoints of the first family as the Preferred Address Family Count.<a href="#section-4-3" class="pilcrow">¶</a></p>
-<p id="section-4-4">For example, take SCION endpoints S1 and S2, IPv6 endpoints x1 and x2, and IPv4 endpoints y1 and y2, all in one group, with x1 first after Destination Address Selection and a Preferred Address Family Count of 1. The list is then S1, x1, y1, S2, x2, y2.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-3">By default, SCION is the first address family. The second is the family of the first IP endpoint after Destination Address Selection, and the third is the other IP family. SCION is first because only SCION attempts give the application a choice of path, and because a host has SCION connectivity only where the host or its network was set up for SCION. <a href="#results" class="auto internal xref">Section 8.1</a> reports what this order costs. Local policy or the application can put SCION last instead.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">The client then interleaves the families (Section 5.3 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>). The list starts with as many endpoints of the first family as the Preferred Address Family Count. After these, it takes one endpoint of each family in turn, beginning with the second family.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-5">For example, take SCION endpoints S1 and S2, IPv6 endpoints x1 and x2, and IPv4 endpoints y1 and y2, all in one group, with x1 first after Destination Address Selection and a Preferred Address Family Count of 1. The list is then S1, x1, y1, S2, x2, y2.<a href="#section-4-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="starting">
@@ -1409,13 +1407,13 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <p id="section-5-1">A client that orders SCION first (<a href="#sorting" class="auto internal xref">Section 4</a>) treats a path lookup as HEv3 treats a DNS query for the preferred address family. It applies the conditions of Section 4.2 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> for starting connection attempts as follows:<a href="#section-5-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5-2.1">
-          <p id="section-5-2.1.1">SCION is the preferred address family while the client has a SCION endpoint whose path lookup has not failed.<a href="#section-5-2.1.1" class="pilcrow">¶</a></p>
+          <p id="section-5-2.1.1">SCION is the preferred address family while the client has a SCION endpoint that it has not discarded (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>).<a href="#section-5-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-5-2.2">
           <p id="section-5-2.2.1">A SCION endpoint in the list of endpoints counts as a positive answer for the SCION family. The client then starts connection attempts without waiting for other answers.<a href="#section-5-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-5-2.3">
-          <p id="section-5-2.3.1">A path lookup in progress is an answer that has not been received. Once the client has a positive answer for an IP address family, it waits for the lookup no longer than the Resolution Delay and then starts with the IP endpoints. A SCION endpoint whose lookup completes later is added to the list (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>). A client that wants to wait longer for path lookups can configure a longer Resolution Delay (Section 10 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), which also lengthens the wait for DNS answers.<a href="#section-5-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-5-2.3.1">A path lookup in progress is an answer that has not been received. Once the client has a positive answer for an IP address family, it waits for the lookup no longer than the Resolution Delay, counted from the first such answer, and then starts with the IP endpoints. A lookup that starts later does not extend this time. A SCION endpoint whose lookup completes later is added to the list (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>). A client that wants to wait longer for path lookups can configure a longer Resolution Delay (Section 10 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), which also lengthens the wait for DNS answers.<a href="#section-5-2.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-5-3">A client that orders SCION last does not wait for path lookups.<a href="#section-5-3" class="pilcrow">¶</a></p>
@@ -1432,7 +1430,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <h3 id="name-candidate-paths">
 <a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-candidate-paths" class="section-name selfRef">Candidate Paths</a>
         </h3>
-<p id="section-6.1-1">When the client attempts a SCION endpoint, it selects the candidate paths, in an order set by local policy, from the paths to the endpoint's AS that are eligible at that time. It selects no more than the Path Attempt Count. The default Path Attempt Count is 2, and values above 3 are <span class="bcp14">NOT RECOMMENDED</span> (<a href="#load" class="auto internal xref">Section 9.3</a>). If no path is eligible, the client skips the endpoint and attempts the next one at once.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-1">When the client attempts a SCION endpoint, it selects the candidate paths, in an order set by local policy, from the paths to the endpoint's AS that are eligible at that time. It selects no more than the Path Attempt Count. The default Path Attempt Count is 2. A client <span class="bcp14">MUST NOT</span> use a Path Attempt Count above 3 (<a href="#load" class="auto internal xref">Section 9.3</a>). If no path is eligible, the client skips the endpoint and attempts the next one at once.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <p id="section-6.1-2">Without a more specific policy, a client <span class="bcp14">SHOULD</span> first select a path with the fewest AS hops, at random among equals. For each further candidate path, up to the Path Attempt Count, it <span class="bcp14">SHOULD</span> select the eligible path that has the least overlap with the paths already selected (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). Overlap is compared by the number of shared transit ASes, then of shared pairs of adjacent ASes, then of shared inter-AS links. A transit AS, a pair, or a link counts once, however many selected paths have it. Among paths of equal overlap, the client selects one with the fewest AS hops, at random among equals. Paths that traverse the same inter-AS links count as one path, and the client uses the one with the latest expiry.<a href="#section-6.1-2" class="pilcrow">¶</a></p>
 <p id="section-6.1-3">Router clocks need to agree with those of core ASes only to within minutes (Section 4.2.2.3 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span> and Section 7.3 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>), so a router can treat a path as expired before the client does. A client therefore <span class="bcp14">SHOULD NOT</span> select a path that expires within 5 minutes unless no other path is left.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
 <p id="section-6.1-4">The candidate paths of a SCION endpoint do not change once the client has started to attempt it. A client <span class="bcp14">MUST NOT</span> send on an expired path: it does not start an attempt on a candidate path that has expired, and an attempt in progress fails when its path expires.<a href="#section-6.1-4" class="pilcrow">¶</a></p>
@@ -1445,9 +1443,8 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         </h3>
 <p id="section-6.2-1">Each connection attempt to a SCION endpoint uses one candidate path: the client sends every packet of the attempt on that path. In all other respects it is a connection attempt as in Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">The client starts an attempt on the first candidate path. Each time the Path Attempt Delay passes and no attempt has succeeded, it starts an attempt to the same endpoint on the next candidate path, until it has started an attempt on each candidate path. Each attempt is a separate connection (Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>).<a href="#section-6.2-2" class="pilcrow">¶</a></p>
-<p id="section-6.2-3">The default Path Attempt Delay is 50 milliseconds (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). A client <span class="bcp14">MAY</span> use another value, for example one that it derives from historical round-trip time data (Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>). A client <span class="bcp14">MUST NOT</span> use a Path Attempt Delay below 10 milliseconds, the lower bound of Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> for the time between two attempts, and <span class="bcp14">SHOULD NOT</span> use one above the Connection Attempt Delay. The lower bound also applies between any of these attempts and an attempt to another endpoint.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
-<p id="section-6.2-4">The attempts on candidate paths do not change the timing of other endpoints. Only the first attempt to a SCION endpoint sets the Next Connection Attempt Timer, and the attempts to one SCION endpoint count as one attempt for the Connection Attempt Delay Multiplier.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
-<p id="section-6.2-5">An attempt to a SCION endpoint succeeds as described in Section 6.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>. The client then cancels the other attempts, including those to the same SCION endpoint, as Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> specifies.<a href="#section-6.2-5" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">The default Path Attempt Delay is 50 milliseconds (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). A client <span class="bcp14">MAY</span> use another value, for example one that it derives from historical round-trip time data (Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>). A client <span class="bcp14">MUST NOT</span> use a Path Attempt Delay below 10 milliseconds, the lower bound of Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> for the time between two attempts, and <span class="bcp14">SHOULD NOT</span> use one above the Connection Attempt Delay, because it would then attempt the next endpoint before the next candidate path. The lower bound also applies between any attempt on a candidate path and an attempt to another endpoint: when two attempts fall due less than 10 milliseconds apart, the client delays the later one.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">Apart from this bound, the attempts on further candidate paths do not change the time at which the client attempts other endpoints. The client sets the Next Connection Attempt Timer when it starts the first attempt to a SCION endpoint, and not when it starts the further ones. For the Connection Attempt Delay Multiplier, the attempts to one SCION endpoint count as one attempt.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="transport">
@@ -1456,40 +1453,31 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-transport-requirements" class="section-name selfRef">Transport Requirements</a>
         </h3>
 <p id="section-6.3-1">Attempts to one SCION endpoint share the client's SCION address and the destination SCION address and port. A client whose transport identifies connections by addresses and ports <span class="bcp14">MUST</span> use a different local port for each concurrent attempt to the same destination SCION address and port. TCP identifies connections in this way, and so does QUIC for a client that uses zero-length connection IDs (Sections 5.1 and 5.2.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-6.3-1" class="pilcrow">¶</a></p>
-<p id="section-6.3-2">The server chooses the paths of its replies, which need not be the reverse (Section 2.4.4 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>) of the path of the attempt. The client <span class="bcp14">MUST</span> accept replies from the SCION address of the endpoint on any path. It <span class="bcp14">MUST</span> present the same server address to the transport regardless of the path a reply arrives on (Section 9 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>). A reply does not show that the reverse of its path carries the client's packets. The client therefore <span class="bcp14">MUST</span> continue to send on the path of the attempt until the attempt succeeds or fails.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
-<p id="section-6.3-3">When a QUIC client cancels an attempt, it <span class="bcp14">SHOULD</span> send a CONNECTION_CLOSE frame on the path of that attempt so that the server can release its state. Section 10.2.3 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span> permits this frame in an Initial packet, which the client uses as long as it has not sent a Handshake packet of that attempt (Section 17.2.2.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>).<a href="#section-6.3-3" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="early-data">
-<section id="section-6.4">
-        <h3 id="name-early-data">
-<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-early-data" class="section-name selfRef">Early Data</a>
-        </h3>
-<p id="section-6.4-1">Early data (QUIC 0-RTT data <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span> or other TLS early data <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>) that is sent in more than one attempt can be processed more than once (Section 8 of <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>). A client <span class="bcp14">SHOULD NOT</span> send the same early data in more than one attempt of a connection establishment. If the attempt that carried early data does not succeed, the client treats the early data as possibly processed. The application protocol decides whether the client sends that data again, as for rejected early data (Section 4.3.10 of <span>[<a href="#RFC9846" class="cite xref">RFC9846</a>]</span>).<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-2">The server chooses the paths of its replies, which need not be the reverse (Section 2.4.4 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>) of the path of the attempt. The client <span class="bcp14">MUST</span> accept replies from the SCION address of the endpoint on any path. It <span class="bcp14">MUST</span> present the same server address to the transport regardless of the path a reply arrives on (Section 9 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>). A reply does not show that the reverse of its path carries the client's packets. The client therefore <span class="bcp14">MUST</span> continue to send on the path of the attempt until the attempt succeeds, fails, or is cancelled.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="scmp">
-<section id="section-6.5">
+<section id="section-6.4">
         <h3 id="name-scmp-error-messages">
-<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-scmp-error-messages" class="section-name selfRef">SCMP Error Messages</a>
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-scmp-error-messages" class="section-name selfRef">SCMP Error Messages</a>
         </h3>
-<p id="section-6.5-1">A client <span class="bcp14">SHOULD NOT</span> end an attempt because of a SCION Control Message Protocol (SCMP) error message (Section 6 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>). Section 8.3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> specifies no authentication for these messages and advises endpoints to treat them as weak hints. An AS on the path of an attempt could otherwise end that attempt with a forged message. A client whose attempts share a local port needs to ensure that such a message does not close the socket that they share.<a href="#section-6.5-1" class="pilcrow">¶</a></p>
+<p id="section-6.4-1">A client <span class="bcp14">SHOULD NOT</span> end an attempt because of a SCION Control Message Protocol (SCMP) error message (Section 6 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span>). Section 8.3.4 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> specifies no authentication for these messages and advises endpoints to treat them as weak hints. An AS on the path of an attempt could otherwise end that attempt with a forged message. A client whose attempts share a local port needs to ensure that such a message does not close the socket that they share.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="scion-required">
-<section id="section-6.6">
+<section id="section-6.5">
         <h3 id="name-applications-that-require-s">
-<a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-applications-that-require-s" class="section-name selfRef">Applications That Require SCION</a>
+<a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-applications-that-require-s" class="section-name selfRef">Applications That Require SCION</a>
         </h3>
-<p id="section-6.6-1">An application can require that its connection use SCION. The client then <span class="bcp14">MUST NOT</span> attempt IP endpoints. It waits for path lookups up to the limit of <a href="#path-lookup" class="auto internal xref">Section 3.3</a>.<a href="#section-6.6-1" class="pilcrow">¶</a></p>
+<p id="section-6.5-1">An application can require that its connection use SCION. The client then attempts no IP endpoints and waits for path lookups up to the limit of <a href="#path-lookup" class="auto internal xref">Section 3.3</a>.<a href="#section-6.5-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="after-establishment">
-<section id="section-6.7">
+<section id="section-6.6">
         <h3 id="name-after-establishment">
-<a href="#section-6.7" class="section-number selfRef">6.7. </a><a href="#name-after-establishment" class="section-name selfRef">After Establishment</a>
+<a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-after-establishment" class="section-name selfRef">After Establishment</a>
         </h3>
-<p id="section-6.7-1">The procedure of this document ends when a connection is established. Its result is one connection on one path. Finding further paths, moving to another path, and using several paths at once belong to the transport. For QUIC, the multipath extension <span>[<a href="#RFC10069" class="cite xref">RFC10069</a>]</span> provides the means to use several paths in one connection, and leaves finding paths and the decision to open or close them to the application. Its use over SCION is not specified here.<a href="#section-6.7-1" class="pilcrow">¶</a></p>
+<p id="section-6.6-1">The procedure of this document ends when a connection is established. Its result is one connection on one path. Finding further paths, moving to another path, and using several paths at once belong to the transport. For QUIC, the multipath extension <span>[<a href="#RFC10069" class="cite xref">RFC10069</a>]</span> provides the means to use several paths in one connection. It does not cover the discovery of addresses and leaves the decision to set up or tear down paths to the application. Its use over SCION is not specified here.<a href="#section-6.6-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1510,6 +1498,9 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <li class="normal" id="section-7-2.3">
           <p id="section-7-2.3.1">Address family order (<a href="#sorting" class="auto internal xref">Section 4</a>): SCION first.<a href="#section-7-2.3.1" class="pilcrow">¶</a></p>
 </li>
+        <li class="normal" id="section-7-2.4">
+          <p id="section-7-2.4.1">Limit on the time of a path lookup (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>): 2 seconds.<a href="#section-7-2.4.1" class="pilcrow">¶</a></p>
+</li>
       </ul>
 </section>
 </div>
@@ -1518,135 +1509,47 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-experiment-goals">
 <a href="#section-8" class="section-number selfRef">8. </a><a href="#name-experiment-goals" class="section-name selfRef">Experiment Goals</a>
       </h2>
-<p id="section-8-1">This document is Experimental because attempting SCION addresses on several paths within HEv3 has not been deployed. The experiment affects clients that implement this document, the servers that they connect to over SCION, and the control services that answer their path lookups. A participating client that orders SCION first can delay its first attempt to an IP endpoint by up to the Resolution Delay, and by one Connection Attempt Delay for each SCION endpoint ordered before that IP endpoint.<a href="#section-8-1" class="pilcrow">¶</a></p>
-<p id="section-8-2">On a SCION testbed with failure injection and on a production SCION network, the experiment is to answer the following questions:<a href="#section-8-2" class="pilcrow">¶</a></p>
+<p id="section-8-1">This document is Experimental because attempting SCION addresses on several paths within HEv3 has not been deployed. A participating client that orders SCION first can delay its first attempt to an IP endpoint by up to the Resolution Delay, and by one Connection Attempt Delay for each SCION endpoint ordered before that IP endpoint. A client that orders SCION last does not delay its first attempt to an IP endpoint.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">The experiment is to answer the following questions from clients in use on a production SCION network:<a href="#section-8-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-8-3.1">
-          <p id="section-8-3.1.1">How long do path lookups take, with and without cached paths, and how often does the first attempt to an IP endpoint start before the lookup completes?<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.1.1">How often does the attempt on the first candidate path fail while an attempt on a further candidate path succeeds? If this is rare, a Path Attempt Count of 1 is the better default.<a href="#section-8-3.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-3.2">
-          <p id="section-8-3.2.1">What does ordering SCION first cost a connection that is established over IP, compared with ordering IP first?<a href="#section-8-3.2.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.2.1">How many attempts does a client start for each connection that it establishes over SCION? Each attempt after the first costs the client and the server a handshake (<a href="#load" class="auto internal xref">Section 9.3</a>). If clients often start a second attempt although the first one succeeds, the default Path Attempt Delay is too short.<a href="#section-8-3.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-3.3">
-          <p id="section-8-3.3.1">Does a second path pay off? Compare a Path Attempt Count of 1, 2, and 3 by the median and the 99th percentile of the connection establishment time, with all paths working and with the first path failing silently, that is, dropping all packets of the attempt. Also compare, under partial packet loss on the first path, a second attempt on a different path with a second attempt on the same path. Measure in production how often a first path fails silently.<a href="#section-8-3.3.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.3.1">What does ordering SCION first cost the connections that are established over IP, and how often do path lookups complete within the Resolution Delay?<a href="#section-8-3.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-8-3.4">
-          <p id="section-8-3.4.1">What is the right Path Attempt Delay? Compare 10, 50, 100, and 250 milliseconds by the same two times, and by the number of handshakes, the octets sent, and the server connection state for each established connection. Also test whether a delay derived from round-trip time data does better than a fixed one.<a href="#section-8-3.4.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-8-3.5">
-          <p id="section-8-3.5.1">Do the candidate paths fail together? Measure in production how many transit ASes, pairs of adjacent ASes, and inter-AS links the candidate paths share. Failures were too rare in production to count joint failures there (<a href="#results" class="auto internal xref">Section 8.1</a>), so measure on the testbed, with a failure injected at a transit AS and at an inter-AS link, how often no candidate path works.<a href="#section-8-3.5.1" class="pilcrow">¶</a></p>
+          <p id="section-8-3.4.1">How much do the candidate paths overlap, and do they fail together?<a href="#section-8-3.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-8-4">For each connection establishment, the experiment records which attempt succeeded, how many attempts the client started and how many it cancelled, and how many handshakes the server completed.<a href="#section-8-4" class="pilcrow">¶</a></p>
-<p id="section-8-5">A Path Attempt Count of 2 is kept as the default if, compared with a Path Attempt Count of 1, it meets two conditions. First, with the first path failing silently, it lowers the 99th percentile of the connection establishment time by at least 100 milliseconds, the Minimum Connection Attempt Delay that Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> recommends. Second, with all paths working, it raises the median by no more than 2 milliseconds, which is about the variation between repeated runs on the testbed. The default Path Attempt Delay is kept if, in addition, the client starts no more than 1.1 attempts on average for each connection that it establishes over SCION with all paths working, that is, at most one further handshake for every ten connections. Otherwise these defaults change. The authors chose these three limits; they are not derived from measurements. The order of the address families is not subject to such a condition: only SCION attempts give the application a choice of path (<a href="#sorting" class="auto internal xref">Section 4</a>), and the experiment reports what ordering SCION first costs. The authors will report further results, and any change to the defaults, in a revision of this document.<a href="#section-8-5" class="pilcrow">¶</a></p>
+<p id="section-8-4">The authors will report results, and any change to the defaults, in a revision of this document.<a href="#section-8-4" class="pilcrow">¶</a></p>
 <div id="results">
 <section id="section-8.1">
         <h3 id="name-results-so-far">
 <a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-results-so-far" class="section-name selfRef">Results So Far</a>
         </h3>
-<p id="section-8.1-1">The testbed results come from the prototype of <a href="#implementation-status" class="auto internal xref">Appendix B</a> in a testbed of 12 SCION ASes, with 400 connection establishments for each configuration, and 200 for each configuration with an inter-AS link or an AS dropping packets. A handshake on a working path took about 28 milliseconds.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
-<p id="section-8.1-2">A path lookup took a median of 5 milliseconds with cached paths. It took 35 milliseconds when the client forced the path service to fetch the paths again, which is what "uncached" means in this section. The first attempt to an IP endpoint started before the lookup completed in at most 5.5% of connection establishments with cached paths and in 95.5% without.<a href="#section-8.1-2" class="pilcrow">¶</a></p>
-<p id="section-8.1-3">Ordering SCION first was compared with ordering IP first by the median connection establishment time. With cached paths, the connection was established over SCION and took 7 milliseconds longer than with IP first. With uncached paths, the client waited the Resolution Delay of 25 milliseconds for the lookup and then established the connection over IP, 25 milliseconds later than with IP first. When no SCION attempt could succeed, the client established the connection over IP after one Connection Attempt Delay, 257 milliseconds later.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
-<p id="section-8.1-4">The times in <a href="#tab-count" class="auto internal xref">Table 1</a> and <a href="#tab-delay" class="auto internal xref">Table 2</a> are connection establishment times in milliseconds.<a href="#section-8.1-4" class="pilcrow">¶</a></p>
-<span id="name-path-attempt-count-with-a-p"></span><div id="tab-count">
-<table class="center" id="table-1">
-          <caption>
-<a href="#table-1" class="selfRef">Table 1</a>:
-<a href="#name-path-attempt-count-with-a-p" class="selfRef">Path Attempt Count, with a Path Attempt Delay of 50 milliseconds</a>
-          </caption>
-<thead>
-            <tr>
-              <th class="text-left" rowspan="1" colspan="1">Path Attempt Count</th>
-              <th class="text-left" rowspan="1" colspan="1">1</th>
-              <th class="text-left" rowspan="1" colspan="1">2</th>
-              <th class="text-left" rowspan="1" colspan="1">3</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">Median, all paths working</td>
-              <td class="text-left" rowspan="1" colspan="1">35.6</td>
-              <td class="text-left" rowspan="1" colspan="1">34.9</td>
-              <td class="text-left" rowspan="1" colspan="1">34.5</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">99th percentile, first path failing silently</td>
-              <td class="text-left" rowspan="1" colspan="1">297.4</td>
-              <td class="text-left" rowspan="1" colspan="1">96.4</td>
-              <td class="text-left" rowspan="1" colspan="1">93.7</td>
-            </tr>
-          </tbody>
-        </table>
-</div>
-<p id="section-8.1-6">A count of 2 met both conditions above. A third path gained nothing.<a href="#section-8.1-6" class="pilcrow">¶</a></p>
-<span id="name-path-attempt-delay-with-a-p"></span><div id="tab-delay">
-<table class="center" id="table-2">
-          <caption>
-<a href="#table-2" class="selfRef">Table 2</a>:
-<a href="#name-path-attempt-delay-with-a-p" class="selfRef">Path Attempt Delay, with a Path Attempt Count of 2</a>
-          </caption>
-<thead>
-            <tr>
-              <th class="text-left" rowspan="1" colspan="1">Path Attempt Delay (ms)</th>
-              <th class="text-left" rowspan="1" colspan="1">10</th>
-              <th class="text-left" rowspan="1" colspan="1">25</th>
-              <th class="text-left" rowspan="1" colspan="1">35</th>
-              <th class="text-left" rowspan="1" colspan="1">50</th>
-              <th class="text-left" rowspan="1" colspan="1">100</th>
-              <th class="text-left" rowspan="1" colspan="1">250</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">Median, all paths working</td>
-              <td class="text-left" rowspan="1" colspan="1">34.7</td>
-              <td class="text-left" rowspan="1" colspan="1">34.4</td>
-              <td class="text-left" rowspan="1" colspan="1">34.8</td>
-              <td class="text-left" rowspan="1" colspan="1">34.9</td>
-              <td class="text-left" rowspan="1" colspan="1">34.9</td>
-              <td class="text-left" rowspan="1" colspan="1">34.3</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">Median, first path failing silently</td>
-              <td class="text-left" rowspan="1" colspan="1">45.6</td>
-              <td class="text-left" rowspan="1" colspan="1">60.2</td>
-              <td class="text-left" rowspan="1" colspan="1">71.0</td>
-              <td class="text-left" rowspan="1" colspan="1">85.4</td>
-              <td class="text-left" rowspan="1" colspan="1">135.3</td>
-              <td class="text-left" rowspan="1" colspan="1">285.6</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">Attempts started for each connection, all paths working</td>
-              <td class="text-left" rowspan="1" colspan="1">2.0</td>
-              <td class="text-left" rowspan="1" colspan="1">1.7</td>
-              <td class="text-left" rowspan="1" colspan="1">1.0</td>
-              <td class="text-left" rowspan="1" colspan="1">1.0</td>
-              <td class="text-left" rowspan="1" colspan="1">1.0</td>
-              <td class="text-left" rowspan="1" colspan="1">1.0</td>
-            </tr>
-          </tbody>
-        </table>
-</div>
-<p id="section-8.1-8">The server completed as many handshakes as the client started attempts. A delay of 10 milliseconds thus cost a second handshake for every connection and did not lower the median. With the first path failing silently, the median was the delay plus about 36 milliseconds. A delay of 50 milliseconds met the condition above for the delay.<a href="#section-8.1-8" class="pilcrow">¶</a></p>
-<p id="section-8.1-9">A delay derived from round-trip time data was tested as the smoothed round-trip time plus twice its variation, taken from earlier connections on the same path, and 50 milliseconds without such data. It had a median of 38 milliseconds. With all paths working, the client started no second attempt and the median did not change. With the first path failing silently, the median was 73.4 milliseconds, 12 milliseconds lower than with the fixed delay.<a href="#section-8.1-9" class="pilcrow">¶</a></p>
-<p id="section-8.1-10">A second attempt on the same path was compared with one on a different path, with a Path Attempt Count of 2. With all paths working, the times were the same. A path that drops all packets fails every attempt on it, so the two were compared with 30% packet loss on the first inter-AS link of the first path: the 99th percentile was 204 milliseconds on the same path and 98 milliseconds on a different path.<a href="#section-8.1-10" class="pilcrow">¶</a></p>
-<p id="section-8.1-11">To test whether the candidate paths fail together, one of the three inter-AS links of the client's AS was set to drop all packets. The first path used that link in about one third of connection establishments. With a Path Attempt Count of 1, these (70 of 195) were established over IP after one Connection Attempt Delay. With a count of 2 or 3, a candidate path worked in every connection establishment, because the candidate paths shared no transit AS and no inter-AS link. Dropping all packets at a neighboring transit AS gave the same result, because every path through that AS uses the same link of the client's AS. A failure further along a path has not been tested.<a href="#section-8.1-11" class="pilcrow">¶</a></p>
-<p id="section-8.1-12">The production results come from one AS of the SCIERA network <span>[<a href="#SCIERA" class="cite xref">SCIERA</a>]</span> in November 2026.<a href="#section-8.1-12" class="pilcrow">¶</a></p>
+<p id="section-8.1-1">No client in use has been measured yet. The following observations come from path lookups and round-trip time probes from one AS of the SCIERA network <span>[<a href="#SCIERA" class="cite xref">SCIERA</a>]</span> to the 78 ASes reachable from it, in November 2026, and from the prototype of <a href="#implementation-status" class="auto internal xref">Appendix B</a> in a testbed of 12 SCION ASes.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-8.1-13.1">
-            <p id="section-8.1-13.1.1">78 ASes were reachable, over 19,786 paths in total and between 1 and 1,600 paths each. The round-trip time to the last router of the first path selected (<a href="#path-selection" class="auto internal xref">Section 6.1</a>) had a median of 39 milliseconds and ranged from under 1 to 155 milliseconds. For 87% of these paths, the round-trip time plus 5 milliseconds was at most 50 milliseconds.<a href="#section-8.1-13.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-8.1-2.1">
+            <p id="section-8.1-2.1.1">A second path was faster than the first by more than 10 milliseconds in fewer than 1% of selections in production. Attempts on several paths therefore do not find a faster path; they protect against a path that does not work.<a href="#section-8.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-8.1-13.2">
-            <p id="section-8.1-13.2.1">In two passes of probes about 70 minutes apart, every path that was probed answered. In a separate measurement of up to 6 paths to each AS, 2 of 1,272 measurements got no answer, and both paths answered before and after. Silent failure of a path was thus rare.<a href="#section-8.1-13.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-8.1-2.2">
+            <p id="section-8.1-2.2.1">In two passes of probes about 70 minutes apart, every one of the 19,786 paths answered. How often a path fails over longer periods of use is not known.<a href="#section-8.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-8.1-13.3">
-            <p id="section-8.1-13.3.1">A second path was faster than the first by more than 10 milliseconds in fewer than 1% of selections. Attempts on several paths therefore do not find a faster path; they protect against a path that does not work.<a href="#section-8.1-13.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-8.1-2.3">
+            <p id="section-8.1-2.3.1">Paths that share no inter-AS link were rare in production: such a second path existed for 2 of the 78 ASes. When the second path was selected by shared inter-AS links alone, it traversed on average 94% of the pairs of adjacent ASes of the first. With the selection of <a href="#path-selection" class="auto internal xref">Section 6.1</a>, it traversed 72% of them.<a href="#section-8.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-8.1-13.4">
-            <p id="section-8.1-13.4.1">When the second path was selected by shared inter-AS links alone, it traversed on average 94% of the pairs of adjacent ASes of the first. With the selection of <a href="#path-selection" class="auto internal xref">Section 6.1</a>, it traversed 72% of them and 93% of the transit ASes of the first, had more AS hops in 71% of selections, and had a median round-trip time 0.5 milliseconds higher. A second path that shared no inter-AS link with the first existed for 2 of the 78 ASes.<a href="#section-8.1-13.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-8.1-2.4">
+            <p id="section-8.1-2.4.1">In production, the round-trip time on the first path selected had a median of 39 milliseconds and a maximum of 155 milliseconds. The round-trip time plus 5 milliseconds was at most 50 milliseconds for 68 of the 78 ASes. Twice the round-trip time plus 5 milliseconds was at most 50 milliseconds for 2 of them and at most 100 milliseconds for 74. Handshake times were not measured in production. In the testbed, where a handshake took 28 milliseconds, a client with a Path Attempt Delay of 10 milliseconds made two handshakes for every connection, and a client with a delay of 35 milliseconds or more made one.<a href="#section-8.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-8.1-13.5">
-            <p id="section-8.1-13.5.1">Path lookups took a median of 2 milliseconds with cached paths. Lookups that the client forced the path service to repeat were measured for 14 ASes. Their median was between 8 and 19 milliseconds for 7 of these ASes, 377 milliseconds for one, and 9 seconds for 6, which exceeds the limit of <a href="#path-lookup" class="auto internal xref">Section 3.3</a>.<a href="#section-8.1-13.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-8.1-2.5">
+            <p id="section-8.1-2.5.1">A path lookup answered from a cache took a median of 2 milliseconds in production and 5 milliseconds in the testbed. A lookup for which the client forced the path service to fetch the paths again took a median of 35 milliseconds in the testbed. In production, it took between 8 and 19 milliseconds for 7 of 14 ASes measured, 377 milliseconds for one, and 9 seconds for 6.<a href="#section-8.1-2.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-8.1-2.6">
+            <p id="section-8.1-2.6.1">In the testbed, where SCION and IP have the same latency, the median connection establishment time with cached paths was 7 milliseconds longer with SCION first than with IP first.<a href="#section-8.1-2.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -1658,7 +1561,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-security-considerations">
 <a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-9-1">The security considerations of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> and <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> apply.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-9-1">The security considerations of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> and <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> apply. A client that orders SCION first attempts a SCION address in its own AS before any IP address, so the policy on internal targets of Section 5.2 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span> matters for it in particular.<a href="#section-9-1" class="pilcrow">¶</a></p>
 <p id="section-9-2">This document relies on SCION path authorization (Section 7.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>), which ensures that packets follow paths that the ASes on them authorized, and on TLS to authenticate the server. Attacks on the SCION control plane are out of scope except as they affect path selection.<a href="#section-9-2" class="pilcrow">¶</a></p>
 <div id="several-paths">
 <section id="section-9.1">
@@ -1666,7 +1569,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-attempts-over-several-paths" class="section-name selfRef">Attempts over Several Paths</a>
         </h3>
 <p id="section-9.1-1">Each attempt exposes the client's first flight to the ASes on its path. QUIC Initial packets are protected with keys that anyone who sees the client's first Initial packet can derive (Section 5.2 of <span>[<a href="#RFC9001" class="cite xref">RFC9001</a>]</span>). Each of these ASes can therefore read the TLS ClientHello, including the server name unless Encrypted Client Hello <span>[<a href="#RFC9849" class="cite xref">RFC9849</a>]</span> is used. The client starts an attempt on a further candidate path whenever the earlier attempt is late, so an AS on the earlier path can extend this exposure to a further path by delaying packets.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
-<p id="section-9.1-2">An AS on the path of an attempt, or on a path that the server chooses for its replies, can make that attempt fail by dropping its packets. An AS on the path of an attempt can also race forged Initial packets (Section 21.1.1.3 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>) or forge SCMP error messages (<a href="#scmp" class="auto internal xref">Section 6.5</a>). None of these actions can make an attempt succeed if success requires a completed QUIC or TLS handshake (Section 6.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), because that handshake authenticates the server. By making the other attempts fail, an AS can make the client use a path that the AS is on.<a href="#section-9.1-2" class="pilcrow">¶</a></p>
+<p id="section-9.1-2">An AS on the path of an attempt, or on a path that the server chooses for its replies, can make that attempt fail by dropping its packets. An AS on the path of an attempt can also race forged Initial packets (Section 21.1.1.3 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>) or forge SCMP error messages (<a href="#scmp" class="auto internal xref">Section 6.4</a>). None of these actions can make an attempt succeed if success requires a completed QUIC or TLS handshake (Section 6.1 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span>), because that handshake authenticates the server. By making the other attempts fail, an AS can make the client use a path that the AS is on.<a href="#section-9.1-2" class="pilcrow">¶</a></p>
 <p id="section-9.1-3">An AS on the path of an attempt can replace the remaining path in the header of the attempt's packets with other authorized segments, and restore it on replies (Section 7.2.1 of <span>[<a href="#I-D.dekater-scion-dataplane" class="cite xref">I-D.dekater-scion-dataplane</a>]</span>). The success of an attempt therefore shows that the server was reached, not that the packets followed the candidate path.<a href="#section-9.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1683,8 +1586,8 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <h3 id="name-load">
 <a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-load" class="section-name selfRef">Load</a>
         </h3>
-<p id="section-9.3-1">Each attempt costs the client and the server a handshake: a key exchange, connection state, and the first flights of both. A Path Attempt Delay shorter than the time in which the first attempt succeeds makes every connection over SCION cost more than one handshake, up to one for each candidate path (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). An attempt that the client cancels holds server state until the server receives the client's CONNECTION_CLOSE frame (<a href="#transport" class="auto internal xref">Section 6.3</a>) or abandons the handshake. A server that limits the concurrent handshakes of one client address needs to allow for one handshake for each candidate path.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
-<p id="section-9.3-2">Attempts to one SCION endpoint share the client's and the server's hosts and can share links within both ASes. When packets are lost there, more attempts add load and are no more likely to succeed. This is why the Path Attempt Count is small.<a href="#section-9.3-2" class="pilcrow">¶</a></p>
+<p id="section-9.3-1">Each attempt costs the client and the server a handshake: a key exchange, connection state, and the first flights of both. A Path Attempt Delay shorter than the time in which the first attempt succeeds makes every connection over SCION cost more than one handshake, up to one for each candidate path (<a href="#design-rationale" class="auto internal xref">Appendix A</a>). An attempt that the client cancels can hold server state until the server abandons the handshake. A server that limits the concurrent handshakes of one client address can see one handshake for each candidate path from one client.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
+<p id="section-9.3-2">Attempts to one SCION endpoint share the client's and the server's hosts and can share links within both ASes. When packets are lost there, more attempts add load and are no more likely to succeed. This is why the Path Attempt Count is limited to 3.<a href="#section-9.3-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="downgrade">
@@ -1692,7 +1595,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <h3 id="name-downgrade">
 <a href="#section-9.4" class="section-number selfRef">9.4. </a><a href="#name-downgrade" class="section-name selfRef">Downgrade</a>
         </h3>
-<p id="section-9.4-1">An attacker that blocks SCION packets or path lookups, or that makes the attempts on all paths fail, can make the client connect over IP and lose the choice of path that SCION provides. The client's own control service can do the same by withholding paths, or by delaying its answer beyond the Resolution Delay (<a href="#starting" class="auto internal xref">Section 5</a>). Applications that require SCION exclude IP endpoints (<a href="#scion-required" class="auto internal xref">Section 6.6</a>).<a href="#section-9.4-1" class="pilcrow">¶</a></p>
+<p id="section-9.4-1">An attacker that blocks SCION packets or path lookups, or that makes the attempts on all paths fail, can make the client connect over IP and lose the choice of path that SCION provides. The client's own control service can do the same by withholding paths, or by delaying its answer beyond the Resolution Delay (<a href="#starting" class="auto internal xref">Section 5</a>). Applications that require SCION exclude IP endpoints (<a href="#scion-required" class="auto internal xref">Section 6.5</a>).<a href="#section-9.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1702,8 +1605,8 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
       <h2 id="name-privacy-considerations">
 <a href="#section-10" class="section-number selfRef">10. </a><a href="#name-privacy-considerations" class="section-name selfRef">Privacy Considerations</a>
       </h2>
-<p id="section-10-1">Path lookups disclose the destination ISD-AS to the client's control service and, for uncached paths, to core ASes of the destination ISD; core ASes of the client's ISD learn the destination ISD (Section 6 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>). Because a client looks up paths when it creates a SCION endpoint (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>), it also discloses the destination for endpoints that it does not attempt and for services that it then reaches over IP.<a href="#section-10-1" class="pilcrow">¶</a></p>
-<p id="section-10-2">Each attempt exposes the client's SCION address and the ClientHello to the ASes on its path (<a href="#several-paths" class="auto internal xref">Section 9.1</a>). A Path Attempt Count of 1 limits this exposure to one path for each SCION endpoint. Attempts to one SCION endpoint carry the same two SCION addresses, so an observer on more than one of their paths can link them.<a href="#section-10-2" class="pilcrow">¶</a></p>
+<p id="section-10-1">Path lookups disclose the destination ISD-AS to the client's control service. For uncached paths, core ASes of the destination ISD learn the destination AS and the client's AS, and core ASes of the client's ISD learn the client's AS and the destination ISD (Section 6 of <span>[<a href="#I-D.john-scion-svcb" class="cite xref">I-D.john-scion-svcb</a>]</span>). Because a client looks up paths when it creates a SCION endpoint (<a href="#path-lookup" class="auto internal xref">Section 3.3</a>), it also discloses the destination for endpoints that it does not attempt and for services that it then reaches over IP.<a href="#section-10-1" class="pilcrow">¶</a></p>
+<p id="section-10-2">Each attempt exposes the client's SCION address and the ClientHello to the ASes on its path (<a href="#several-paths" class="auto internal xref">Section 9.1</a>). A Path Attempt Count of 1 limits this exposure to one path for each SCION endpoint. Attempts to one SCION endpoint carry the same two SCION addresses, so an observer on the paths of more than one of these attempts can link the attempts.<a href="#section-10-2" class="pilcrow">¶</a></p>
 <p id="section-10-3">Historical data about paths that the client keeps is partitioned as Sections 5.3 and 9 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> specify. A path cache shared with other applications, such as that of a local path service, is outside the client's control.<a href="#section-10-3" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1758,17 +1661,9 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <dd>
 <span class="refAuthor">Iyengar, J., Ed.</span> and <span class="refAuthor">M. Thomson, Ed.</span>, <span class="refTitle">"QUIC: A UDP-Based Multiplexed and Secure Transport"</span>, <span class="seriesInfo">RFC 9000</span>, <span class="seriesInfo">DOI 10.17487/RFC9000</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9000">https://www.rfc-editor.org/rfc/rfc9000</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="RFC9001">[RFC9001]</dt>
-        <dd>
-<span class="refAuthor">Thomson, M., Ed.</span> and <span class="refAuthor">S. Turner, Ed.</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="seriesInfo">RFC 9001</span>, <span class="seriesInfo">DOI 10.17487/RFC9001</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9001">https://www.rfc-editor.org/rfc/rfc9001</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RFC9460">[RFC9460]</dt>
-        <dd>
-<span class="refAuthor">Schwartz, B.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Service Binding and Parameter Specification via the DNS (SVCB and HTTPS Resource Records)"</span>, <span class="seriesInfo">RFC 9460</span>, <span class="seriesInfo">DOI 10.17487/RFC9460</span>, <time datetime="2023-11" class="refDate">November 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9460">https://www.rfc-editor.org/rfc/rfc9460</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="RFC9846">[RFC9846]</dt>
       <dd>
-<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 9846</span>, <span class="seriesInfo">DOI 10.17487/RFC9846</span>, <time datetime="2026-07" class="refDate">July 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9846">https://www.rfc-editor.org/rfc/rfc9846</a>&gt;</span>. </dd>
+<span class="refAuthor">Schwartz, B.</span>, <span class="refAuthor">Bishop, M.</span>, and <span class="refAuthor">E. Nygren</span>, <span class="refTitle">"Service Binding and Parameter Specification via the DNS (SVCB and HTTPS Resource Records)"</span>, <span class="seriesInfo">RFC 9460</span>, <span class="seriesInfo">DOI 10.17487/RFC9460</span>, <time datetime="2023-11" class="refDate">November 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9460">https://www.rfc-editor.org/rfc/rfc9460</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
@@ -1782,6 +1677,10 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <dt id="RFC7942">[RFC7942]</dt>
         <dd>
 <span class="refAuthor">Sheffer, Y.</span> and <span class="refAuthor">A. Farrel</span>, <span class="refTitle">"Improving Awareness of Running Code: The Implementation Status Section"</span>, <span class="seriesInfo">BCP 205</span>, <span class="seriesInfo">RFC 7942</span>, <span class="seriesInfo">DOI 10.17487/RFC7942</span>, <time datetime="2016-07" class="refDate">July 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7942">https://www.rfc-editor.org/rfc/rfc7942</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9001">[RFC9001]</dt>
+        <dd>
+<span class="refAuthor">Thomson, M., Ed.</span> and <span class="refAuthor">S. Turner, Ed.</span>, <span class="refTitle">"Using TLS to Secure QUIC"</span>, <span class="seriesInfo">RFC 9001</span>, <span class="seriesInfo">DOI 10.17487/RFC9001</span>, <time datetime="2021-05" class="refDate">May 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9001">https://www.rfc-editor.org/rfc/rfc9001</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9217">[RFC9217]</dt>
         <dd>
@@ -1825,17 +1724,17 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
         <dd class="break"></dd>
 <dt id="appendix-A-1.3">Paths that differ:</dt>
         <dd style="margin-left: 1.5em" id="appendix-A-1.4">
-          <p id="appendix-A-1.4.1">The first path has the fewest AS hops because each AS and each inter-AS link adds delay. A second attempt adds little if its path shares most links with the first. The overlap is counted from the widest scope of failure to the narrowest. The failure of a transit AS affects every path through it. Parallel links between the same pair of adjacent ASes can fail together (<a href="#selection-security" class="auto internal xref">Section 9.2</a>). An inter-AS link is the narrowest scope. Section 2.3.3 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> makes a similar distinction, between AS-disjoint and link-disjoint paths, for the selection of path segments. The selection ranks partial overlap because disjoint paths were rare in production, where selection by links alone mostly chose parallel links (<a href="#results" class="auto internal xref">Section 8.1</a>). The default Path Attempt Count of 2 gives the client one alternative; a third gained nothing in the testbed (<a href="#results" class="auto internal xref">Section 8.1</a>).<a href="#appendix-A-1.4.1" class="pilcrow">¶</a></p>
+          <p id="appendix-A-1.4.1">The first path has the fewest AS hops because each AS and each inter-AS link adds delay. A second attempt adds little if its path shares most links with the first. The overlap is counted from the widest scope of failure to the narrowest. The failure of a transit AS affects every path through it. Parallel links between the same pair of adjacent ASes can fail together (<a href="#selection-security" class="auto internal xref">Section 9.2</a>). An inter-AS link is the narrowest scope. Section 2.3.3 of <span>[<a href="#I-D.dekater-scion-controlplane" class="cite xref">I-D.dekater-scion-controlplane</a>]</span> makes a similar distinction, between AS-disjoint and link-disjoint paths, for the selection of path segments. The selection ranks partial overlap because disjoint paths were rare in production, where selection by links alone mostly chose parallel links (<a href="#results" class="auto internal xref">Section 8.1</a>). The default Path Attempt Count of 2 gives the client one alternative at the cost of at most one further handshake. No path failed in the measurements so far (<a href="#results" class="auto internal xref">Section 8.1</a>), so whether that alternative is worth its cost is the first question of the experiment (<a href="#experiment" class="auto internal xref">Section 8</a>).<a href="#appendix-A-1.4.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="appendix-A-1.5">A further path after 50 milliseconds:</dt>
         <dd style="margin-left: 1.5em" id="appendix-A-1.6">
-          <p id="appendix-A-1.6.1">An attempt on a working path succeeds after about one round-trip time. A client that waits longer than that before it starts an attempt on a further path makes one handshake when the first path works, and loses little when it does not: in the testbed, the connection establishment time with a failing first path was the Path Attempt Delay plus the time on a working path (<a href="#results" class="auto internal xref">Section 8.1</a>). Starting the attempts 10 milliseconds apart cost a second handshake for every connection in the testbed, and in production the selected paths differed too little in round-trip time for this to find a faster one (<a href="#results" class="auto internal xref">Section 8.1</a>). The default is a fixed value because a fixed value needs no data about the destination. A delay of 50 milliseconds exceeded the round-trip time plus 5 milliseconds for 87% of the first paths selected in production. To a destination with a longer round-trip time, the client starts the second attempt even when the first path works; the Path Attempt Count bounds that cost, and a client can avoid it with a delay that it derives from round-trip time data. Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> permits a delay below the Minimum Connection Attempt Delay, down to 10 milliseconds. That minimum guards against congestion collapse under high packet loss; here the Path Attempt Count bounds the attempts started together.<a href="#appendix-A-1.6.1" class="pilcrow">¶</a></p>
+          <p id="appendix-A-1.6.1">An attempt on a working path succeeds after one or two round-trip times: a QUIC handshake takes a second round trip when the server's first flight, with its certificate chain, exceeds what a server sends before it has validated the client's address (Section 8.1 of <span>[<a href="#RFC9000" class="cite xref">RFC9000</a>]</span>). A client that waits longer than that before it starts an attempt on a further path makes one handshake when the first path works. When the first path does not work, the connection is established later by the Path Attempt Delay. Starting the attempts 10 milliseconds apart cost a second handshake for every connection in the testbed, and the selected paths differed too little in round-trip time for this to find a faster one (<a href="#results" class="auto internal xref">Section 8.1</a>). The default is a fixed value because a fixed value needs no data about the destination, and 50 milliseconds exceeded one round-trip time to most ASes in production, but two round-trip times to few (<a href="#results" class="auto internal xref">Section 8.1</a>). When the handshake takes longer than the delay, the client starts the second attempt even when the first path works; the Path Attempt Count bounds that cost, and a client can avoid it with a delay that it derives from round-trip time data. Section 6 of <span>[<a href="#I-D.ietf-happy-happyeyeballs-v3" class="cite xref">I-D.ietf-happy-happyeyeballs-v3</a>]</span> permits a delay below the Minimum Connection Attempt Delay, down to 10 milliseconds. That minimum guards against congestion collapse under high packet loss; here the Path Attempt Count, at most 3, bounds the attempts started together.<a href="#appendix-A-1.6.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 <dt id="appendix-A-1.7">Path lookups within the Resolution Delay:</dt>
         <dd style="margin-left: 1.5em" id="appendix-A-1.8">
-          <p id="appendix-A-1.8.1">A lookup answered from the cache of a local path service took a median of 5 milliseconds in the testbed and 2 milliseconds in production. An uncached lookup took a median of 35 milliseconds in the testbed and, in production, between 8 milliseconds and 9 seconds depending on the destination AS (<a href="#results" class="auto internal xref">Section 8.1</a>). Waiting up to the Resolution Delay, 25 milliseconds by default, adds no parameter and covers most cached lookups when the SVCB or HTTPS answer arrives no later than the first IP answer. When paths are not cached, the first connection can go over IP and later ones over SCION.<a href="#appendix-A-1.8.1" class="pilcrow">¶</a></p>
+          <p id="appendix-A-1.8.1">A lookup answered from the cache of a local path service took a few milliseconds, and other lookups took between 8 milliseconds and 9 seconds (<a href="#results" class="auto internal xref">Section 8.1</a>). Waiting up to the Resolution Delay, 25 milliseconds by default, adds no parameter and covers most cached lookups when the SVCB or HTTPS answer arrives no later than the first IP answer. When paths are not cached, the first connection can go over IP and later ones over SCION.<a href="#appendix-A-1.8.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
@@ -1851,7 +1750,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <span class="break"></span><dl class="dlParallel" id="appendix-B-3">
         <dt id="appendix-B-3.1">scion-hev3 <span>[<a href="#SCION-HEV3" class="cite xref">SCION-HEV3</a>]</span>:</dt>
         <dd style="margin-left: 1.5em" id="appendix-B-3.2">
-          <p id="appendix-B-3.2.1">A research prototype in Go on release v0.15.1 of the SCION reference implementation <span>[<a href="#SCION-V0.15.1" class="cite xref">SCION-V0.15.1</a>]</span>. Contact: Tony John. Last updated: November 2026.<a href="#appendix-B-3.2.1" class="pilcrow">¶</a></p>
+          <p id="appendix-B-3.2.1">A research prototype in Go on release v0.15.1 of the SCION reference implementation <span>[<a href="#SCION-V0.15.1" class="cite xref">SCION-V0.15.1</a>]</span>. It implements this document for QUIC over SCION. Contact: Tony John. Last updated: November 2026.<a href="#appendix-B-3.2.1" class="pilcrow">¶</a></p>
 </dd>
       <dd class="break"></dd>
 </dl>
